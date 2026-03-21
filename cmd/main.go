@@ -10,6 +10,10 @@ import (
 )
 
 func main() {
+
+}
+
+func runMigration() {
 	dbPath := filepath.Join("persistence", "index.db")
 
 	db, err := sql.Open("sqlite", dbPath)
