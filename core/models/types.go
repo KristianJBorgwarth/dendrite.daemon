@@ -1,4 +1,4 @@
-// Package types contains relevant types for ipc
+// Package types types contains relevant types for ipc
 package types
 
 import "encoding/json"
