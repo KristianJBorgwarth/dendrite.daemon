@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"embed"
 	"log/slog"
+	"os"
 	"path/filepath"
 	"sort"
 )
@@ -12,7 +13,14 @@ import (
 var migrationsFS embed.FS
 
 func InitializeIndex(vaultPath string) error {
-	dbPath := filepath.Join(vaultPath, "index.db")
+	indexDir := filepath.Join(vaultPath, ".index")
+
+	if err := os.MkdirAll(indexDir, 0755); err != nil {
+		slog.Error("failed to create index directory", "error", err)
+		return err
+	}
+
+	dbPath := filepath.Join(indexDir, "index.db")
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {

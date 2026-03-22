@@ -2,8 +2,6 @@ package handlers
 
 import (
 	"encoding/json"
-	"log/slog"
-
 	"github.com/KristianJBorgwarth/dendrite.daemon/config"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
@@ -30,7 +28,6 @@ type InitializeHandler struct{}
 func (h InitializeHandler) Handle(raw json.RawMessage) (any, *rpc.Error) {
 	var params initializeCommand
 
-	slog.Info("initializing with params", "params", string(raw))
 	if err := json.Unmarshal(raw, &params); err != nil {
 		return nil, &rpc.Error{
 			Code:    -32602,
