@@ -1,5 +1,5 @@
 // Package persistence handles database schema migrations
-package persistence 
+package persistence
 
 import (
 	"database/sql"
@@ -8,7 +8,24 @@ import (
 	"sort"
 )
 
-func ApplyMigrations(db *sql.DB, dir string) error {
+func InitializeIndex(vaulPath string) error {
+	dbPath := filepath.Join(vaulPath, "index.db")
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return err
+	}
+	defer db.Close()
+
+	migrationsDir := filepath.Join("persistence", "migrations")
+
+	if err := applyMigrations(db, migrationsDir); err != nil {
+		return err
+	}
+	return nil
+}
+
+func applyMigrations(db *sql.DB, dir string) error {
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY);`)
 	if err != nil {
 		return err

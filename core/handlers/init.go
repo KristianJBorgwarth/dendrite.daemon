@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
-
 	"github.com/KristianJBorgwarth/dendrite.daemon/config"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
 type initializeParams struct {
@@ -24,6 +24,7 @@ type initializeParams struct {
 
 func Initialize(raw json.RawMessage) (*config.Config, error) {
 	var params initializeParams
+
 	if err := json.Unmarshal(raw, &params); err != nil {
 		return nil, err
 	}
@@ -41,7 +42,14 @@ func Initialize(raw json.RawMessage) (*config.Config, error) {
 			FilenameFormat: params.DailyNote.FilenameFormat,
 		},
 	}
+
 	cfg.SetDefaults()
+
+	err := persistence.InitializeIndex(cfg.VaultPath)
+	if err != nil {
+		return nil, err
+	}
 
 	return cfg, nil
 }
+

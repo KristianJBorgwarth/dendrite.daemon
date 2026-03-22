@@ -115,13 +115,13 @@ func (s *Server) handleRequest(req types.Request) {
 		err    error
 	)
 
+	// move to handler package?
 	switch req.Method {
 	case "initialize":
 		s.config, err = handlers.Initialize(req.Params)
 		result = map[string]any{"status": "ok"}
 	default:
 		err = fmt.Errorf("unknown method: %s", req.Method)
-
 	}
 
 	s.writeResponse(req.ID, result, err)
