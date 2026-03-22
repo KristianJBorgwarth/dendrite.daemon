@@ -5,6 +5,7 @@ import (
 	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/config"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
@@ -24,12 +25,17 @@ type initializeCommand struct {
 	} `json:"dailyNote"`
 }
 
-func Initialize(raw json.RawMessage) (*config.Config, error) {
+type InitializeHandler struct{}
+
+func (h InitializeHandler) Handle(raw json.RawMessage) (any, *rpc.Error) {
 	var params initializeCommand
 
 	slog.Info("initializing with params", "params", string(raw))
 	if err := json.Unmarshal(raw, &params); err != nil {
-		return nil, err
+		return nil, &rpc.Error{
+			Code:    -32602,
+			Message: "invalid params: " + err.Error(),
+		}
 	}
 
 	cfg := &config.Config{
@@ -50,7 +56,10 @@ func Initialize(raw json.RawMessage) (*config.Config, error) {
 
 	err := persistence.InitializeIndex(cfg.VaultPath)
 	if err != nil {
-		return nil, err
+		return nil, &rpc.Error{
+			Code:    -1,
+			Message: "failed to initialize index: " + err.Error(),
+		}
 	}
 
 	return cfg, nil
