@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
 type createNoteCommand struct {
@@ -14,7 +15,7 @@ type createNoteCommand struct {
 }
 
 type CreateNoteHandler struct{
-	repository NoteRepository
+	repository repositories.NoteRepository
 }
 
 func (h CreateNoteHandler) Handle(params []byte) (any, *rpc.Error) {
@@ -23,4 +24,11 @@ func (h CreateNoteHandler) Handle(params []byte) (any, *rpc.Error) {
 		return nil, &rpc.Error{Code: -32602, Message: "invalid params"}
 	}
 
+	err := h.repository.Upsert(cmd.Title, cmd.TemplatePath, cmd.Path)
+
+	if err != nil {
+		return nil, &rpc.Error{Code: -1, Message: err.Error()}
+	}
+	
+	return map[string]any{"status": "ok"}, nil
 }
