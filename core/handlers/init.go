@@ -2,6 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"log/slog"
+
 	"github.com/KristianJBorgwarth/dendrite.daemon/config"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
@@ -25,6 +27,7 @@ type initializeCommand struct {
 func Initialize(raw json.RawMessage) (*config.Config, error) {
 	var params initializeCommand
 
+	slog.Info("initializing with params", "params", string(raw))
 	if err := json.Unmarshal(raw, &params); err != nil {
 		return nil, err
 	}

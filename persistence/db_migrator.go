@@ -1,39 +1,46 @@
-// Package persistence handles database schema migrations
 package persistence
 
 import (
 	"database/sql"
+	"embed"
 	"log/slog"
-	"os"
 	"path/filepath"
 	"sort"
 )
 
-func InitializeIndex(vaulPath string) error {
-	dbPath := filepath.Join(vaulPath, "index.db")
+//go:embed migrations/*.sql
+var migrationsFS embed.FS
+
+func InitializeIndex(vaultPath string) error {
+	dbPath := filepath.Join(vaultPath, "index.db")
 
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
+		slog.Error("failed to open database", "error", err)
 		return err
 	}
+
 	defer db.Close()
 
-	migrationsDir := filepath.Join("persistence", "migrations")
-
-	if err := applyMigrations(db, migrationsDir); err != nil {
+	if err := applyMigrations(db); err != nil {
 		slog.Error("failed to apply migrations", "error", err)
 		return err
 	}
+
 	return nil
 }
 
-func applyMigrations(db *sql.DB, dir string) error {
-	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY);`)
+func applyMigrations(db *sql.DB) error {
+	_, err := db.Exec(`
+		CREATE TABLE IF NOT EXISTS schema_migrations (
+			version TEXT PRIMARY KEY
+		);
+	`)
 	if err != nil {
 		return err
 	}
 
-	entries, err := os.ReadDir(dir)
+	entries, err := migrationsFS.ReadDir("migrations")
 	if err != nil {
 		return err
 	}
@@ -43,7 +50,7 @@ func applyMigrations(db *sql.DB, dir string) error {
 	})
 
 	for _, e := range entries {
-		if e.IsDir(){
+		if e.IsDir() {
 			continue
 		}
 
@@ -58,9 +65,7 @@ func applyMigrations(db *sql.DB, dir string) error {
 			continue
 		}
 
-		path := filepath.Join(dir, name)
-
-		sqlBytes, err := os.ReadFile(path)
+		sqlBytes, err := migrationsFS.ReadFile("migrations/" + name)
 		if err != nil {
 			return err
 		}
@@ -69,9 +74,14 @@ func applyMigrations(db *sql.DB, dir string) error {
 			return err
 		}
 
-		if _, err := db.Exec(`INSERT INTO schema_migrations (version) VALUES (?)`, name); err != nil {
+		if _, err := db.Exec(
+			`INSERT INTO schema_migrations (version) VALUES (?)`,
+			name,
+		); err != nil {
 			return err
 		}
+
+		slog.Info("applied migration", "file", name)
 	}
 
 	return nil
@@ -79,7 +89,11 @@ func applyMigrations(db *sql.DB, dir string) error {
 
 func isMigrationApplied(db *sql.DB, version string) (bool, error) {
 	var v string
-	err := db.QueryRow(`SELECT version FROM schema_migrations WHERE version= ?`, version).Scan(&v)
+
+	err := db.QueryRow(
+		`SELECT version FROM schema_migrations WHERE version = ?`,
+		version,
+	).Scan(&v)
 
 	if err == sql.ErrNoRows {
 		return false, nil
