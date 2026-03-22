@@ -7,16 +7,16 @@ import (
 
 type Request struct {
 	Jsonrpc string          `json:"jsonrpc"`
-	ID      int             `json:"id"`
+	ID      *int             `json:"id"`
 	Method  string          `json:"method"`
 	Params  json.RawMessage `json:"params"`
 }
 
 type Response struct {
-	Jsonrpc string `json:"jsonrpc"`
-	ID      int    `json:"id"`
-	Result  any    `json:"result,omitempty"`
-	Error   any    `json:"error,omitempty"`
+	Jsonrpc string          `json:"jsonrpc"`
+	ID      *int             `json:"id"`
+	Result  any `json:"result,omitempty"`
+	Error   *Error           `json:"error,omitempty"`
 }
 
 type Notification struct {
@@ -25,3 +25,7 @@ type Notification struct {
 	Params  json.RawMessage `json:"params,omitempty"`
 }
 
+type Error struct {
+	Code    int    `json:"code"`
+	Message string `json:"message"`
+}
