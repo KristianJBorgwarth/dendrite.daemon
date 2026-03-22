@@ -6,7 +6,7 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
-type initializeParams struct {
+type initializeCommand struct {
 	VaultPath   string `json:"vaultPath"`
 	TemplateDir string `json:"templateDir"`
 
@@ -23,7 +23,7 @@ type initializeParams struct {
 }
 
 func Initialize(raw json.RawMessage) (*config.Config, error) {
-	var params initializeParams
+	var params initializeCommand
 
 	if err := json.Unmarshal(raw, &params); err != nil {
 		return nil, err

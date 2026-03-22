@@ -7,7 +7,6 @@ import (
 
 func main() {
 	logging.Init()
-
-	srv := server.New(nil, ":8080")
+	srv := server.New(":6969")
 	srv.Start()
 }

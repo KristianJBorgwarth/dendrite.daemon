@@ -3,6 +3,7 @@ package persistence
 
 import (
 	"database/sql"
+	"log/slog"
 	"os"
 	"path/filepath"
 	"sort"
@@ -20,6 +21,7 @@ func InitializeIndex(vaulPath string) error {
 	migrationsDir := filepath.Join("persistence", "migrations")
 
 	if err := applyMigrations(db, migrationsDir); err != nil {
+		slog.Error("failed to apply migrations", "error", err)
 		return err
 	}
 	return nil
