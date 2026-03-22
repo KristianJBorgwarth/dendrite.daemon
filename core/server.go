@@ -1,5 +1,5 @@
-// Package server contains core functionality for dendrite server
-package server
+// Package core contains core functionality for dendrite server
+package core 
 
 import (
 	"bufio"
@@ -10,13 +10,17 @@ import (
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/KristianJBorgwarth/dendrite.daemon/config"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 )
 
 type Server struct {
-	in  *bufio.Reader
-	out io.Writer
-	log *slog.Logger
+	in     *bufio.Reader
+	out    io.Writer
+	log    *slog.Logger
+	config *config.Config
 }
 
 func NewServer() *Server {
@@ -25,6 +29,31 @@ func NewServer() *Server {
 		out: os.Stdout,
 		log: slog.Default(),
 	}
+}
+
+func (s *Server) writeResponse(id int, result any, err error) {
+	resp := types.Response{
+		Jsonrpc: "2.0",
+		ID:      id,
+	}
+
+	if err != nil {
+		resp.Error = map[string]any{
+			"code":    -1,
+			"message": err.Error(),
+		}
+	} else {
+		resp.Result = result
+	}
+
+	data, marshalErr := json.Marshal(resp)
+	if marshalErr != nil {
+		s.log.Error("failed to marshal response", "error", marshalErr)
+		return
+	}
+
+	fmt.Fprintf(s.out, "Content-Length: %d\r\n\r\n", len(data))
+	s.out.Write(data)
 }
 
 // Run starts the server loop, continuously reading and processing incoming messages
@@ -70,7 +99,7 @@ func (s *Server) readContentLength() (int, error) {
 			break
 		}
 
-		if after, ok :=strings.CutPrefix(line, "Content-Length:"); ok  {
+		if after, ok := strings.CutPrefix(line, "Content-Length:"); ok {
 			val := strings.TrimSpace(after)
 			return strconv.Atoi(val)
 		}
@@ -80,9 +109,24 @@ func (s *Server) readContentLength() (int, error) {
 
 func (s *Server) handleRequest(req types.Request) {
 	s.log.Info("handling request", "method", req.Method, "id", req.ID)
+
+	var (
+		result any
+		err    error
+	)
+
+	switch req.Method {
+	case "initialize":
+		s.config, err = handlers.Initialize(req.Params)
+		result = map[string]any{"status": "ok"}
+	default:
+		err = fmt.Errorf("unknown method: %s", req.Method)
+
+	}
+
+	s.writeResponse(req.ID, result, err)
 }
 
 func (s *Server) handleNotification(notif types.Notification) {
 	s.log.Info("handling notification", "method", notif.Method)
-}	
-
+}

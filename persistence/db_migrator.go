@@ -1,5 +1,5 @@
-// Package migrate handles database schema migrations
-package migrate
+// Package persistence handles database schema migrations
+package persistence 
 
 import (
 	"database/sql"
@@ -8,7 +8,7 @@ import (
 	"sort"
 )
 
-func Run(db *sql.DB, dir string) error {
+func ApplyMigrations(db *sql.DB, dir string) error {
 	_, err := db.Exec(`CREATE TABLE IF NOT EXISTS schema_migrations (version TEXT PRIMARY KEY);`)
 	if err != nil {
 		return err
