@@ -24,7 +24,7 @@ func (h CreateNoteHandler) Handle(params []byte) (any, *rpc.Error) {
 		return nil, &rpc.Error{Code: -32602, Message: "invalid params"}
 	}
 
-	err := h.repository.Upsert(cmd.Title, cmd.TemplatePath, cmd.Path)
+	err := h.repository.Upsert(cmd.Title, cmd.Path, cmd.Path)
 
 	if err != nil {
 		return nil, &rpc.Error{Code: -1, Message: err.Error()}
