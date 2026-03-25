@@ -1,8 +1,11 @@
 package handlers
 
 import (
+	"bytes"
 	"encoding/json"
+	"os"
 
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
@@ -14,21 +17,46 @@ type createNoteCommand struct {
 	Vars         map[string]string `json:"vars"`
 }
 
-type CreateNoteHandler struct{
-	repository repositories.NoteRepository
+type CreateNoteHandler struct {
+	noteRepo repositories.NoteRepository
+	tagRepo  repositories.TagRepository
 }
 
-func (h CreateNoteHandler) Handle(params []byte) (any, *rpc.Error) {
+func (h CreateNoteHandler) Handle(params []byte) (*rpc.Response, *rpc.Error) {
 	var cmd createNoteCommand
+
 	if err := json.Unmarshal(params, &cmd); err != nil {
-		return nil, &rpc.Error{Code: -32602, Message: "invalid params"}
+		return nil, h.ReturnError(err)
 	}
 
-	err := h.repository.Upsert(cmd.Title, cmd.Path, cmd.Path)
-
+	data, err := os.ReadFile(cmd.TemplatePath)
 	if err != nil {
-		return nil, &rpc.Error{Code: -1, Message: err.Error()}
+		return nil, h.ReturnError(err)
 	}
-	
-	return map[string]any{"status": "ok"}, nil
+
+	feMatter, err := frontmatter.ParseFrontMatter(bytes.NewReader(data))
+	if err != nil {
+		return nil, h.ReturnError(err)
+	}
+
+	tags, err := frontmatter.ExtractTags(feMatter)
+	if err != nil {
+		return nil, h.ReturnError(err)
+	}
+
+	err = h.tagRepo.Upsert(tags)
+	if err != nil {
+		return nil, h.ReturnError(err)
+	}
+
+	err = h.noteRepo.Upsert(cmd.Title, cmd.Path, frontmatter.Slugify(cmd.Title))
+	if err != nil {
+		return nil, h.ReturnError(err)
+	}
+
+	return &rpc.Response{Jsonrpc: "2.0", Result: cmd.Path}, nil
+}
+
+func (h *CreateNoteHandler) ReturnError(err error) *rpc.Error {
+	return &rpc.Error{Code: -1, Message: err.Error()}
 }
