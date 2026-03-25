@@ -3,9 +3,19 @@ package frontmatter
 import (
 	"bufio"
 	"bytes"
+	"encoding/json"
 	"errors"
 	"io"
 )
+
+type FrontMatter struct {
+	Title   string
+	Tags    []string
+	Created string
+	Updated string
+	Author  string
+
+}
 
 func ParseFrontMatter(r io.Reader) (map[string]string, error) {
 	scanner := bufio.NewScanner(r)
@@ -30,4 +40,17 @@ func ParseFrontMatter(r io.Reader) (map[string]string, error) {
 	}
 
 	return frontMatter, nil
+}
+
+func ExtractTags(frontMatter map[string]string) ([]string, error) {
+	tagsStr, ok := frontMatter["tags"]
+	if !ok {
+		return nil, errors.New("tags not found in front matter")
+	}
+	var tags []string
+	err := json.Unmarshal([]byte(tagsStr), &tags)
+	if err != nil {
+		return nil, err
+	}
+	return tags, nil
 }

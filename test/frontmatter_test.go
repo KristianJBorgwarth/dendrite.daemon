@@ -1,4 +1,4 @@
-package test
+package frontmatter_test
 
 import (
 	"strings"
@@ -28,6 +28,29 @@ This is the content of the note.`
 	for key, expectedValue := range expected {
 		if value, ok := result[key]; !ok || value != expectedValue {
 			t.Errorf("expected %s to be %s, got %s", key, expectedValue, value)
+		}
+	}
+}
+
+func TestExtractTags(t *testing.T) {
+	frontMatter := map[string]string{
+		"tags": `["test", "note"]`,
+	}
+
+	expected := []string{"test", "note"}
+
+	result, err := frontmatter.ExtractTags(frontMatter)
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if len(result) != len(expected) {
+		t.Fatalf("expected %d tags, got %d", len(expected), len(result))
+	}
+
+	for i, expectedTag := range expected {
+		if result[i] != expectedTag {
+			t.Errorf("expected tag %d to be %s, got %s", i, expectedTag, result[i])
 		}
 	}
 }
