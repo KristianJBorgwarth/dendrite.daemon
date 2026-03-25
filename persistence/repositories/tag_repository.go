@@ -1,10 +1,12 @@
-
 package repositories
 
-import "database/sql"
+import (
+	"database/sql"
+	"strings"
+)
 
 type TagRepository interface {
-	Upsert(title string, path string) error
+	Upsert(names []string) error
 }
 
 type tagRepository struct {
@@ -15,14 +17,34 @@ func NewTagRepository(db *sql.DB) TagRepository {
 	return &tagRepository{db: db}
 }
 
-func (r *tagRepository) Upsert(title string, path string) error {
-	query := `
-	INSERT INTO tags (title, path)
-	VALUES ($1, $2)
-	ON CONFLICT (slug) DO UPDATE
-	SET title = EXCLUDED.title,
-	    path = EXCLUDED.path;
-	`
-	_, err := r.db.Exec(query, title, path)
-	return err
+func (r *tagRepository) Upsert(names []string) error {
+	if len(names) == 0 {
+		return nil
+	}
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	placeholders := make([]string, 0, len(names))
+	args := make([]any, 0, len(names))
+
+	for _, name := range names {
+		placeholders = append(placeholders, "(?)")
+		args = append(args, name)
+	}
+
+	query := "WITH input(name) AS (VALUES " +
+		strings.Join(placeholders, ",") +
+		") INSERT INTO tags(name) " +
+		"SELECT name FROM input " +
+		"ON CONFLICT(name) DO NOTHING;"
+
+	if _, err := tx.Exec(query, args...); err != nil {
+		return err
+	}
+
+	return tx.Commit()
 }

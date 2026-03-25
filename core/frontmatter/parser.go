@@ -14,7 +14,6 @@ type FrontMatter struct {
 	Created string
 	Updated string
 	Author  string
-
 }
 
 func ParseFrontMatter(r io.Reader) (map[string]string, error) {
