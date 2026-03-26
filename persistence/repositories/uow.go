@@ -5,6 +5,12 @@ import (
 	"database/sql"
 )
 
+type DBContext interface {
+	ExecContext(ctx context.Context, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, args ...any) *sql.Row
+}
+
 type UnitOfWork struct {
 	db *sql.DB
 }
@@ -13,22 +19,22 @@ func NewUnitOfWork(db *sql.DB) *UnitOfWork {
 	return &UnitOfWork{db: db}
 }
 
-func (u *UnitOfWork) Execute(ctx context.Context, fn func(tx *sql.Tx) error) error {
-	tx, err := u.db.BeginTx(ctx, nil)
+func (u *UnitOfWork) Execute(ctx context.Context, fn func(tx *sql.Tx) error) (err error) {
+	transcation, err := u.db.BeginTx(ctx, nil)
 	if err != nil {
 		return err
 	}
 
 	defer func() {
 		if err != nil {
-			_ = tx.Rollback()
+			_ = transcation.Rollback()
 		}
 	}()
 
-	if err := fn(tx); err != nil {
-		tx.Rollback()
+	if err = fn(transcation); err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	err = transcation.Commit()
+	return err
 }

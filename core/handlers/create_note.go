@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"os"
 
@@ -18,11 +19,12 @@ type createNoteCommand struct {
 }
 
 type CreateNoteHandler struct {
+	uow      repositories.UnitOfWork
 	noteRepo repositories.NoteRepository
 	tagRepo  repositories.TagRepository
 }
 
-func (h CreateNoteHandler) Handle(params []byte) (*rpc.Response, *rpc.Error) {
+func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Response, *rpc.Error) {
 	var cmd createNoteCommand
 
 	if err := json.Unmarshal(params, &cmd); err != nil {

@@ -1,21 +1,22 @@
 package repositories
 
-import "database/sql"
+import (
+	"context"
+)
 
 type NoteRepository interface {
-	Upsert(title string, path string, slug string) error
+	Upsert(ctx context.Context, title string, path string, slug string) error
 }
 
 type noteRepository struct {
-	db *sql.DB
+	dbCtx DBContext
 }
 
-func NewNoteRepository(db *sql.DB) NoteRepository {
-	return &noteRepository{db: db}
+func NewNoteRepository(dbContext DBContext) NoteRepository {
+	return &noteRepository{dbCtx: dbContext}
 }
 
-
-func (r *noteRepository) Upsert(title string, path string, slug string) error {
+func (r *noteRepository) Upsert(ctx context.Context, title string, path string, slug string) error {
 	query := `
 	INSERT INTO notes (title, path, slug)
 	VALUES ($1, $2, $3)
@@ -23,6 +24,6 @@ func (r *noteRepository) Upsert(title string, path string, slug string) error {
 	SET title = EXCLUDED.title,
 	    path = EXCLUDED.path;
 	`
-	_, err := r.db.Exec(query, title, path, slug)
+	_, err := r.dbCtx.ExecContext(ctx, query, title, path, slug)
 	return err
 }
