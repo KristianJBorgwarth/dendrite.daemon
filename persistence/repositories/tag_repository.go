@@ -1,32 +1,26 @@
 package repositories
 
 import (
-	"database/sql"
+	"context"
 	"strings"
 )
 
 type TagRepository interface {
-	Upsert(names []string) error
+	Upsert(ctx context.Context, names []string) error
 }
 
 type tagRepository struct {
-	db *sql.DB
+	dbContext DBContext
 }
 
-func NewTagRepository(db *sql.DB) TagRepository {
-	return &tagRepository{db: db}
+func NewTagRepository(dbContext DBContext) TagRepository {
+	return &tagRepository{dbContext: dbContext}
 }
 
-func (r *tagRepository) Upsert(names []string) error {
+func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
 	if len(names) == 0 {
 		return nil
 	}
-
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
 
 	placeholders := make([]string, 0, len(names))
 	args := make([]any, 0, len(names))
@@ -42,23 +36,18 @@ func (r *tagRepository) Upsert(names []string) error {
 		"SELECT name FROM input " +
 		"ON CONFLICT(name) DO NOTHING;"
 
-	if _, err := tx.Exec(query, args...); err != nil {
+	_, err := r.dbContext.ExecContext(ctx, query, args)
+	if err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	return nil
 }
 
 func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}
-
-	tx, err := r.db.Begin()
-	if err != nil {
-		return err
-	}
-	defer tx.Rollback()
 
 	placeholders := make([]string, 0, len(tagIDs))
 	args := make([]any, 0, len(tagIDs))
@@ -75,9 +64,10 @@ func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
 		"ON CONFLICT(note_id, tag_id) DO NOTHING" +
 		"SELECT note_id, tag_id FROM input;"
 
-	if _, err := tx.Exec(query, args...); err != nil {
+	_, err := r.dbContext.ExecContext(context.Background(), query, args)
+	if err != nil {
 		return err
 	}
 
-	return tx.Commit()
+	return nil
 }
