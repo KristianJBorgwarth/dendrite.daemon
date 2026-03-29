@@ -3,6 +3,7 @@ package handlers
 import (
 	"bytes"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"os"
 
@@ -19,9 +20,7 @@ type createNoteCommand struct {
 }
 
 type CreateNoteHandler struct {
-	uow      repositories.UnitOfWork
-	noteRepo repositories.NoteRepository
-	tagRepo  repositories.TagRepository
+	uow repositories.UnitOfWork
 }
 
 func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Response, *rpc.Error) {
@@ -46,12 +45,21 @@ func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Resp
 		return nil, h.ReturnError(err)
 	}
 
-	err = h.tagRepo.Upsert(ctx, tags)
-	if err != nil {
-		return nil, h.ReturnError(err)
-	}
+	err = h.uow.Execute(ctx, func(tx *sql.Tx) error {
+		tagRepo := repositories.NewTagRepository(tx)
+		noteRepo := repositories.NewNoteRepository(tx)
 
-	err = h.noteRepo.Upsert(ctx, cmd.Title, cmd.Path, frontmatter.Slugify(cmd.Title))
+		if err = tagRepo.Upsert(ctx, tags); err != nil {
+			return err
+		}
+
+		if err = noteRepo.Upsert(ctx, cmd.Title, cmd.Path, frontmatter.Slugify(cmd.Title)); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
 	if err != nil {
 		return nil, h.ReturnError(err)
 	}
