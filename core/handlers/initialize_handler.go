@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"context"
 	"encoding/json"
+
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
@@ -12,7 +14,7 @@ type initializeCommand struct {
 
 type InitializeHandler struct{}
 
-func (h InitializeHandler) Handle(raw json.RawMessage) (any, *rpc.Error) {
+func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, *rpc.Error) {
 	var params initializeCommand
 
 	if err := json.Unmarshal(raw, &params); err != nil {

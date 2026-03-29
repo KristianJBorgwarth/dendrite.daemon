@@ -46,12 +46,12 @@ func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Resp
 		return nil, h.ReturnError(err)
 	}
 
-	err = h.tagRepo.Upsert(tags)
+	err = h.tagRepo.Upsert(ctx, tags)
 	if err != nil {
 		return nil, h.ReturnError(err)
 	}
 
-	err = h.noteRepo.Upsert(cmd.Title, cmd.Path, frontmatter.Slugify(cmd.Title))
+	err = h.noteRepo.Upsert(ctx, cmd.Title, cmd.Path, frontmatter.Slugify(cmd.Title))
 	if err != nil {
 		return nil, h.ReturnError(err)
 	}
