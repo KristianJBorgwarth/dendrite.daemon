@@ -20,7 +20,11 @@ type createNoteCommand struct {
 }
 
 type CreateNoteHandler struct {
-	uow repositories.UnitOfWork
+	uow *repositories.UnitOfWork
+}
+
+func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
+	return &CreateNoteHandler{uow: uow}
 }
 
 func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Response, *rpc.Error) {

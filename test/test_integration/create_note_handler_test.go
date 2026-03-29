@@ -1,7 +1,28 @@
 package integration_test
 
-import "testing"
+import (
+	"database/sql"
+	"testing"
+
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
+	"github.com/KristianJBorgwarth/dendrite.daemon/test"
+)
 
 
 func TestCreateNoteHandlerOnSucess(t *testing.T) {
+
+	// Arrange
+	db, err := sql.Open("sqlite", test.NewTestVars().DbPath)
+	if err != nil {
+		t.Fatalf("failed to open database: %v", err)
+	}
+	defer db.Close()
+	uow := repositories.NewUnitOfWork(db)
+
+	handler := handlers.NewCreateNoteHandler(uow)
+
+	// Act
+
+	// Assert
 }
