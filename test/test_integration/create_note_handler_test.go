@@ -2,19 +2,17 @@ package integration_test
 
 import (
 	"database/sql"
+	"encoding/json"
 	"testing"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
-	"github.com/KristianJBorgwarth/dendrite.daemon/test"
 )
 
-
 func TestCreateNoteHandlerOnSucess(t *testing.T) {
-
 	// Arrange
 	// TODO: move to test vars and main_test.go
-	db, err := sql.Open("sqlite", test.NewTestVars().DbPath)
+	db, err := sql.Open("sqlite", DbPath)
 	if err != nil {
 		t.Fatalf("failed to open database: %v", err)
 	}
@@ -24,11 +22,21 @@ func TestCreateNoteHandlerOnSucess(t *testing.T) {
 
 	handler := handlers.NewCreateNoteHandler(uow)
 
-	// TODO: add to test vars and move to main_test.go
-	ctx := test.Context()
+	requestParams := struct {
+		Title   string `json:"title"`
+		Content string `json:"content"`
+	}{
+		Title:   "Test Note",
+		Content: "This is a test note.",
+	}
+
+	requestParamsBytes, err := json.Marshal(requestParams)
+	if err != nil {
+		t.Fatalf("failed to marshal request params: %v", err)
+	}
+
+	request := CreateTestRequest("createNote", 1, requestParamsBytes)
 
 	// Act
-
-
-	// Assert
+	response, rpcError = handler.Handle(TestContext, request.Params)
 }

@@ -27,7 +27,7 @@ func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
 	return &CreateNoteHandler{uow: uow}
 }
 
-func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Response, *rpc.Error) {
+func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Response) {
 	var cmd createNoteCommand
 
 	if err := json.Unmarshal(params, &cmd); err != nil {

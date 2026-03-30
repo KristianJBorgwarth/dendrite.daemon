@@ -8,5 +8,5 @@ import (
 )
 
 type Handler interface {
-	Handle(ctx context.Context, raw json.RawMessage) (any, *rpc.Error)
+	Handle(ctx context.Context, raw json.RawMessage) (*rpc.Response)
 }
