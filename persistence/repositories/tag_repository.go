@@ -15,7 +15,7 @@ type tagRepository struct {
 }
 
 func NewTagRepository(tx *sql.Tx) TagRepository {
-return &tagRepository{Transaction: tx}
+	return &tagRepository{Transaction: tx}
 }
 
 func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
@@ -31,18 +31,10 @@ func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
 		args = append(args, name)
 	}
 
-	query := "WITH input(name) AS (VALUES " +
-		strings.Join(placeholders, ",") +
-		") INSERT INTO tags(name) " +
-		"SELECT name FROM input " +
-		"ON CONFLICT(name) DO NOTHING;"
+	query := "INSERT OR IGNORE INTO tags(name) VALUES " + strings.Join(placeholders, ",")
 
-	_, err := r.Transaction.ExecContext(ctx, query, args)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	_, err := r.Transaction.ExecContext(ctx, query, args...)
+	return err
 }
 
 func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
@@ -65,7 +57,7 @@ func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
 		"ON CONFLICT(note_id, tag_id) DO NOTHING" +
 		"SELECT note_id, tag_id FROM input;"
 
-	_, err := r.Transaction.ExecContext(context.Background(), query, args)
+	_, err := r.Transaction.ExecContext(context.Background(), query, args...)
 	if err != nil {
 		return err
 	}

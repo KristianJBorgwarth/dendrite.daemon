@@ -4,12 +4,16 @@ import "os"
 
 type FileStore struct {
 	staged []stagedFile
-	commited []string
+	committed []string
 }
 
 type stagedFile struct {
 	path string
 	data []byte
+}
+
+func NewFileStore() *FileStore {
+	return &FileStore{}
 }
 
 func (fs *FileStore) Stage(path string, data []byte) {
@@ -24,19 +28,19 @@ func (fs *FileStore) Flush() error {
 		if err := os.WriteFile(file.path, file.data, 0o644); err != nil {
 			return err
 		}
-		fs.commited = append(fs.commited, file.path)
+		fs.committed = append(fs.committed, file.path)
 	}
 	fs.staged = nil
 	return nil
 }
 
 func (fs *FileStore) Rollback() error {
-	for _, path := range fs.commited {
+	for _, path := range fs.committed {
 		if err := os.Remove(path); err != nil {
 			return err
 		}
 	}
-	fs.commited = nil
+	fs.committed = nil
 	return nil
 }
 

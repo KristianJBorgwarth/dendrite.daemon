@@ -7,13 +7,13 @@ import (
 )
 
 type UnitOfWork struct {
-	db *sql.DB
+	db          *sql.DB
 	Transaction *sql.Tx
-	FileStore *store.FileStore
+	FileStore   *store.FileStore
 }
 
 func NewUnitOfWork(db *sql.DB) *UnitOfWork {
-	return &UnitOfWork{db: db}
+	return &UnitOfWork{db: db, FileStore: store.NewFileStore()}
 }
 
 func (u *UnitOfWork) Begin() (tx *sql.Tx, err error) {
@@ -26,10 +26,18 @@ func (u *UnitOfWork) Begin() (tx *sql.Tx, err error) {
 }
 
 func (u *UnitOfWork) Commit() error {
-	if u.Transaction == nil {
-		return nil
+	if err := u.FileStore.Flush(); err != nil {
+		u.Transaction.Rollback()
+		u.Transaction = nil
+		return err
 	}
-	return u.Transaction.Commit()
+	if err := u.Transaction.Commit(); err != nil {
+		u.FileStore.Rollback()
+		u.Transaction = nil
+		return err
+	}
+	u.Transaction = nil
+	return nil
 }
 
 func (u *UnitOfWork) Rollback() {
