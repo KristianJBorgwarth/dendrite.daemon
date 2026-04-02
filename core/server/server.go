@@ -1,4 +1,4 @@
-// Package server contains the server running the JSON-RPC 2.0 Protocol. 
+// Package server contains the server running the JSON-RPC 2.0 Protocol.
 package server
 
 import (
@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 )
@@ -55,23 +56,31 @@ func (s *Server) handle(w io.Writer, req rpc.Request) {
 			Code:    -32601,
 			Message: "method not found",
 		})
-	return
-}
+		return
+	}
 
 	result, err := handler.Handle(ctx, req.Params)
+	if err != nil {
+		s.respond(w, req.ID, nil, &rpc.Error{
+			Code:    -32000,
+			Message: err.Error(),
+		})
+		return
+	}
 
 	if req.ID == nil {
 		return
 	}
 
-	s.respond(w, req.ID, result, err)
+	s.respond(w, req.ID, result, nil)
 }
 
 func (s *Server) respond(w io.Writer, id *int, result any, err *rpc.Error) {
+	resultJSON, _ := json.Marshal(result)
 	resp := rpc.Response{
 		Jsonrpc: "2.0",
 		ID:      id,
-		Result:  result,
+		Result:  resultJSON,
 		Error:   err,
 	}
 
@@ -80,5 +89,5 @@ func (s *Server) respond(w io.Writer, id *int, result any, err *rpc.Error) {
 
 func (s *Server) write(w io.Writer, resp rpc.Response) {
 	data, _ := json.Marshal(resp)
-	fmt.Fprintln(w, string(data)) 
+	fmt.Fprintln(w, string(data))
 }

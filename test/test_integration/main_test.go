@@ -2,27 +2,51 @@ package integration_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
+	_ "modernc.org/sqlite"
 )
 
-var DbPath string = os.TempDir() + "/dendrite_test_vault"
-var TestContext = context.Background()
+type DBFixture struct {
+	DB          *sql.DB
+	DBPath      string
+	TestContext context.Context
+}
 
-func TestMain(m *testing.M) {
+func NewDBFixture() *DBFixture {
+	vaultPath := os.TempDir()
 
-	err := persistence.InitializeIndex(DbPath)
+	err := persistence.InitializeIndex(vaultPath)
 	if err != nil {
 		panic(err)
 	}
 
+	dbPath := filepath.Join(os.TempDir(), ".index", "index.db")
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		panic(err)
+	}
+
+	return &DBFixture{
+		DB:          db,
+		DBPath:      dbPath,
+		TestContext: context.Background(),
+	}
+}
+
+var Fixture = NewDBFixture()
+
+func TestMain(m *testing.M) {
 	code := m.Run()
 
-	os.RemoveAll(DbPath)
+	os.RemoveAll(Fixture.DBPath)
 
 	os.Exit(code)
 }

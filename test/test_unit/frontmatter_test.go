@@ -1,56 +1,32 @@
 package frontmatter_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestParseFrontMatter(t *testing.T) {
-	input := `title: My Note
-template: default
+func TestParseTags_ValidFrontMatter_ReturnsTags(t *testing.T) {
+	input := `---
+title: My Note
 tags: ["test", "note"]
 ---
 This is the content of the note.`
 
-	expected := map[string]string{
-		"title":    "My Note",
-		"template": "default",
-		"tags":     `["test", "note"]`,
-	}
+	result, err := frontmatter.ParseTags([]byte(input))
 
-	result, err := frontmatter.ParseFrontMatter(strings.NewReader(input))
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	for key, expectedValue := range expected {
-		if value, ok := result[key]; !ok || value != expectedValue {
-			t.Errorf("expected %s to be %s, got %s", key, expectedValue, value)
-		}
-	}
+	require.NoError(t, err)
+	assert.Equal(t, []string{"test", "note"}, result)
 }
 
-func TestExtractTags(t *testing.T) {
-	frontMatter := map[string]string{
-		"tags": `["test", "note"]`,
-	}
+func TestParseTags_MissingDelimiter_ReturnsError(t *testing.T) {
+	input := `title: My Note
+tags: ["test", "note"]
+This is the content of the note.`
 
-	expected := []string{"test", "note"}
+	_, err := frontmatter.ParseTags([]byte(input))
 
-	result, err := frontmatter.ExtractTags(frontMatter)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
-	}
-
-	if len(result) != len(expected) {
-		t.Fatalf("expected %d tags, got %d", len(expected), len(result))
-	}
-
-	for i, expectedTag := range expected {
-		if result[i] != expectedTag {
-			t.Errorf("expected tag %d to be %s, got %s", i, expectedTag, result[i])
-		}
-	}
+	assert.ErrorContains(t, err, "missing front matter delimiter")
 }
