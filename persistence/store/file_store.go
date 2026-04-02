@@ -1,0 +1,46 @@
+package store
+
+import "os"
+
+type FileStore struct {
+	staged []stagedFile
+	commited []string
+}
+
+type stagedFile struct {
+	path string
+	data []byte
+}
+
+func (fs *FileStore) Stage(path string, data []byte) {
+	fs.staged = append(fs.staged, stagedFile{path: path, data: data})
+}
+
+func (fs *FileStore) Flush() error {
+	for _, file := range fs.staged {
+		if fs.fileExists(file.path) {
+			continue
+		}
+		if err := os.WriteFile(file.path, file.data, 0o644); err != nil {
+			return err
+		}
+		fs.commited = append(fs.commited, file.path)
+	}
+	fs.staged = nil
+	return nil
+}
+
+func (fs *FileStore) Rollback() error {
+	for _, path := range fs.commited {
+		if err := os.Remove(path); err != nil {
+			return err
+		}
+	}
+	fs.commited = nil
+	return nil
+}
+
+func (fs *FileStore) fileExists(path string) bool {
+	_, err := os.Stat(path)
+	return err == nil
+}

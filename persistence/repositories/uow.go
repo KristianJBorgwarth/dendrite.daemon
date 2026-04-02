@@ -1,13 +1,15 @@
-
 package repositories
 
 import (
 	"database/sql"
+
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
 type UnitOfWork struct {
 	db *sql.DB
 	Transaction *sql.Tx
+	FileStore *store.FileStore
 }
 
 func NewUnitOfWork(db *sql.DB) *UnitOfWork {
@@ -30,10 +32,10 @@ func (u *UnitOfWork) Commit() error {
 	return u.Transaction.Commit()
 }
 
-func (u *UnitOfWork) Rollback() error {
+func (u *UnitOfWork) Rollback() {
 	if u.Transaction == nil {
-		return nil
+		return
 	}
-	return u.Transaction.Rollback()
+	u.Transaction.Rollback()
+	u.FileStore.Rollback()
 }
-
