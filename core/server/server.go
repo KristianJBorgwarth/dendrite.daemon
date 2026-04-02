@@ -41,9 +41,7 @@ func (s *Server) Run(r io.Reader, w io.Writer) error {
 		}
 
 		s.handle(w, req)
-
 	}
-
 	return scanner.Err()
 }
 

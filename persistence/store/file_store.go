@@ -3,7 +3,7 @@ package store
 import "os"
 
 type FileStore struct {
-	staged []stagedFile
+	staged    []stagedFile
 	committed []string
 }
 
@@ -21,14 +21,24 @@ func (fs *FileStore) Stage(path string, data []byte) {
 }
 
 func (fs *FileStore) Flush() error {
+	originalCommittedLen := len(fs.committed)
+	var writtenPaths []string
 	for _, file := range fs.staged {
+
 		if fs.fileExists(file.path) {
 			continue
 		}
+
 		if err := os.WriteFile(file.path, file.data, 0o644); err != nil {
+			for _, path := range writtenPaths {
+				_ = os.Remove(path)
+			}
+			fs.committed = fs.committed[:originalCommittedLen]
 			return err
 		}
+
 		fs.committed = append(fs.committed, file.path)
+		writtenPaths = append(writtenPaths, file.path)
 	}
 	fs.staged = nil
 	return nil
@@ -48,3 +58,4 @@ func (fs *FileStore) fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
+
