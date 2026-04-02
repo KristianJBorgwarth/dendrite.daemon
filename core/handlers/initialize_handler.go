@@ -3,36 +3,26 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
 type initializeCommand struct {
-	VaultPath   string `json:"vaultPath"`
+	VaultPath string `json:"vaultPath"`
 }
 
 type InitializeHandler struct{}
 
-func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, *rpc.Error) {
+func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var params initializeCommand
 
 	if err := json.Unmarshal(raw, &params); err != nil {
-		return nil, &rpc.Error{
-			Code:    -32602,
-			Message: "invalid params: " + err.Error(),
-		}
+		return nil, err
 	}
-
 
 	err := persistence.InitializeIndex(params.VaultPath)
 	if err != nil {
-		return nil, &rpc.Error{
-			Code:    -1,
-			Message: "failed to initialize index: " + err.Error(),
-		}
+		return nil, err
 	}
 
 	return nil, nil
 }
-

@@ -10,7 +10,7 @@ import (
 
 func TestCreateNoteHandlerOnSucess(t *testing.T) {
 	// Arrange
-	uow := repositories.NewUnitOfWork(Fixture.Db)
+	uow := repositories.NewUnitOfWork(Fixture.DB)
 
 	handler := handlers.NewCreateNoteHandler(uow)
 
@@ -30,18 +30,14 @@ func TestCreateNoteHandlerOnSucess(t *testing.T) {
 	request := CreateTestRequest("createNote", 1, requestParamsBytes)
 
 	// Act
-	response := handler.Handle(Fixture.TestContext, request.Params)
+	response, err := handler.Handle(Fixture.TestContext, request.Params)
 
 	// Assert
-	if response.Error != nil {
-		t.Fatalf("expected no error, got: %v", response.Error)
+	if err != nil {
+		t.Fatalf("handler returned an error: %v", err)
 	}
 
-	if response.Result == nil {
-		t.Fatal("expected result, got nil")
-	}
-
-	if  *response.ID != 1 {
-		t.Fatal("expected non-empty ID in response result")
+	if response != nil {
+		t.Fatalf("expected response to be nil, got: %v", response)
 	}
 }

@@ -7,8 +7,8 @@ import (
 	"encoding/json"
 	"os"
 
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/files"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -27,26 +27,21 @@ func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
 	return &CreateNoteHandler{uow: uow}
 }
 
-func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Response) {
+func (h CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var cmd createNoteCommand
 
-	if err := json.Unmarshal(params, &cmd); err != nil {
-		return nil, h.ReturnError(err)
+	if err := json.Unmarshal(raw, &cmd); err != nil {
+		return nil, err
 	}
 
-	data, err := os.ReadFile(cmd.TemplatePath)
+	data, err := h.getTemplate(cmd.TemplatePath)
 	if err != nil {
-		return nil, h.ReturnError(err)
+		return nil, err
 	}
 
-	feMatter, err := frontmatter.ParseFrontMatter(bytes.NewReader(data))
+	tags, err := frontmatter.ExtractTags(data)
 	if err != nil {
-		return nil, h.ReturnError(err)
-	}
-
-	tags, err := frontmatter.ExtractTags(feMatter)
-	if err != nil {
-		return nil, h.ReturnError(err)
+		return nil, err
 	}
 
 	err = h.uow.Execute(ctx, func(tx *sql.Tx) error {
@@ -63,14 +58,20 @@ func (h CreateNoteHandler) Handle(ctx context.Context, params []byte) (*rpc.Resp
 
 		return nil
 	})
-
 	if err != nil {
-		return nil, h.ReturnError(err)
+		return nil, err
 	}
 
-	return &rpc.Response{Jsonrpc: "2.0", Result: cmd.Path}, nil
+	return cmd.Path, nil
 }
 
-func (h *CreateNoteHandler) ReturnError(err error) *rpc.Error {
-	return &rpc.Error{Code: -1, Message: err.Error()}
+func (h *CreateNoteHandler) getTemplate(templatePath string) ([]byte, error) {
+	if templatePath == "" {
+		return nil, nil
+	}
+	data, err := os.ReadFile(templatePath)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }

@@ -16,7 +16,7 @@ type FrontMatter struct {
 	Author  string
 }
 
-func ParseFrontMatter(r io.Reader) (map[string]string, error) {
+func parseFrontMatter(r io.Reader) (map[string]string, error) {
 	scanner := bufio.NewScanner(r)
 	frontMatter := make(map[string]string)
 
@@ -41,13 +41,19 @@ func ParseFrontMatter(r io.Reader) (map[string]string, error) {
 	return frontMatter, nil
 }
 
-func ExtractTags(frontMatter map[string]string) ([]string, error) {
+func ExtractTags(file []byte ) ([]string, error) {
+	r := bytes.NewReader(file)
+	frontMatter, err := parseFrontMatter(r)
+	if err != nil {
+		return nil, err
+	}
 	tagsStr, ok := frontMatter["tags"]
 	if !ok {
-		return nil, errors.New("tags not found in front matter")
+		return nil, nil
 	}
+	
 	var tags []string
-	err := json.Unmarshal([]byte(tagsStr), &tags)
+	err = json.Unmarshal([]byte(tagsStr), &tags)
 	if err != nil {
 		return nil, err
 	}

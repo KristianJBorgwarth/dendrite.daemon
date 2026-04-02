@@ -5,44 +5,48 @@ import (
 	"database/sql"
 	"encoding/json"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
+	_ "modernc.org/sqlite"
 )
 
-type TestFixture struct {
-	Db *sql.DB
-	DbPath string
+type DBFixture struct {
+	DB          *sql.DB
+	DBPath      string
 	TestContext context.Context
 }
 
-func NewTestFixture() (*TestFixture, error) {
-	dbPath := os.TempDir() + "/dendrite_test_vault"
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		return nil, err
-	}
+func NewDBFixture() *DBFixture {
+	vaultPath := os.TempDir()
 
-	return &TestFixture{
-		Db: db,
-		DbPath: dbPath,
-		TestContext: context.Background(),
-	}, nil
-}
-
-var Fixture, err = NewTestFixture()
-
-func TestMain(m *testing.M) {
-
-	err := persistence.InitializeIndex(Fixture.DbPath)
+	err := persistence.InitializeIndex(vaultPath)
 	if err != nil {
 		panic(err)
 	}
 
+	dbPath := filepath.Join(os.TempDir(), ".index", "index.db")
+
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		panic(err)
+	}
+
+	return &DBFixture{
+		DB:          db,
+		DBPath:      dbPath,
+		TestContext: context.Background(),
+	}
+}
+
+var Fixture = NewDBFixture()
+
+func TestMain(m *testing.M) {
 	code := m.Run()
 
-	os.RemoveAll(Fixture.DbPath)
+	os.RemoveAll(Fixture.DBPath)
 
 	os.Exit(code)
 }
@@ -55,5 +59,3 @@ func CreateTestRequest(method string, ID int, params json.RawMessage) *rpc.Reque
 		Params:  params,
 	}
 }
-
-
