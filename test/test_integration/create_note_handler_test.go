@@ -1,7 +1,6 @@
 package integration_test
 
 import (
-	"database/sql"
 	"encoding/json"
 	"testing"
 
@@ -11,14 +10,7 @@ import (
 
 func TestCreateNoteHandlerOnSucess(t *testing.T) {
 	// Arrange
-	// TODO: move to test vars and main_test.go
-	db, err := sql.Open("sqlite", DbPath)
-	if err != nil {
-		t.Fatalf("failed to open database: %v", err)
-	}
-	defer db.Close()
-
-	uow := repositories.NewUnitOfWork(db)
+	uow := repositories.NewUnitOfWork(Fixture.Db)
 
 	handler := handlers.NewCreateNoteHandler(uow)
 
@@ -38,5 +30,18 @@ func TestCreateNoteHandlerOnSucess(t *testing.T) {
 	request := CreateTestRequest("createNote", 1, requestParamsBytes)
 
 	// Act
-	response, rpcError = handler.Handle(TestContext, request.Params)
+	response := handler.Handle(Fixture.TestContext, request.Params)
+
+	// Assert
+	if response.Error != nil {
+		t.Fatalf("expected no error, got: %v", response.Error)
+	}
+
+	if response.Result == nil {
+		t.Fatal("expected result, got nil")
+	}
+
+	if  *response.ID != 1 {
+		t.Fatal("expected non-empty ID in response result")
+	}
 }

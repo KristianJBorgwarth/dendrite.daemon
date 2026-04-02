@@ -1,17 +1,20 @@
-// Package server contains the server running the JSON-RPC 2.0 Protocol. 
+// Package server contains the server running the JSON-RPC 2.0 Protocol.
 package server
 
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
+
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 )
 
 type Server struct {
+	Db *sql.DB
 	handlers map[string]handlers.Handler
 }
 
@@ -19,6 +22,10 @@ func NewServer() *Server {
 	return &Server{
 		handlers: make(map[string]handlers.Handler),
 	}
+}
+
+func (s *Server) InitDatabase(db *sql.DB) {
+	s.Db = db
 }
 
 func (s *Server) Register(method string, handler handlers.Handler) {
@@ -51,31 +58,21 @@ func (s *Server) handle(w io.Writer, req rpc.Request) {
 	handler, ok := s.handlers[req.Method]
 
 	if !ok {
-		s.respond(w, req.ID, nil, &rpc.Error{
-			Code:    -32601,
-			Message: "method not found",
+		s.write(w, rpc.Response{
+			Jsonrpc: "2.0",
+			ID:      req.ID,
+			Error:   &rpc.Error{Code: -32601, Message: "method not found"},
 		})
 	return
 }
 
-	result, err := handler.Handle(ctx, req.Params)
+	result := handler.Handle(ctx, req.Params)
 
 	if req.ID == nil {
 		return
 	}
 
-	s.respond(w, req.ID, result, err)
-}
-
-func (s *Server) respond(w io.Writer, id *int, result any, err *rpc.Error) {
-	resp := rpc.Response{
-		Jsonrpc: "2.0",
-		ID:      id,
-		Result:  result,
-		Error:   err,
-	}
-
-	s.write(w, resp)
+	s.write(w, *result)
 }
 
 func (s *Server) write(w io.Writer, resp rpc.Response) {

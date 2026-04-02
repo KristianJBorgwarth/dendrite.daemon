@@ -2,6 +2,7 @@ package integration_test
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"os"
 	"testing"
@@ -10,19 +11,38 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
-var DbPath string = os.TempDir() + "/dendrite_test_vault"
-var TestContext = context.Background()
+type TestFixture struct {
+	Db *sql.DB
+	DbPath string
+	TestContext context.Context
+}
+
+func NewTestFixture() (*TestFixture, error) {
+	dbPath := os.TempDir() + "/dendrite_test_vault"
+	db, err := sql.Open("sqlite", dbPath)
+	if err != nil {
+		return nil, err
+	}
+
+	return &TestFixture{
+		Db: db,
+		DbPath: dbPath,
+		TestContext: context.Background(),
+	}, nil
+}
+
+var Fixture, err = NewTestFixture()
 
 func TestMain(m *testing.M) {
 
-	err := persistence.InitializeIndex(DbPath)
+	err := persistence.InitializeIndex(Fixture.DbPath)
 	if err != nil {
 		panic(err)
 	}
 
 	code := m.Run()
 
-	os.RemoveAll(DbPath)
+	os.RemoveAll(Fixture.DbPath)
 
 	os.Exit(code)
 }
@@ -35,3 +55,5 @@ func CreateTestRequest(method string, ID int, params json.RawMessage) *rpc.Reque
 		Params:  params,
 	}
 }
+
+
