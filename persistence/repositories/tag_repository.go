@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
 	"strings"
 )
 
@@ -10,11 +11,11 @@ type TagRepository interface {
 }
 
 type tagRepository struct {
-	dbContext DBContext
+	Transaction *sql.Tx
 }
 
-func NewTagRepository(dbContext DBContext) TagRepository {
-	return &tagRepository{dbContext: dbContext}
+func NewTagRepository(tx *sql.Tx) TagRepository {
+return &tagRepository{Transaction: tx}
 }
 
 func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
@@ -36,7 +37,7 @@ func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
 		"SELECT name FROM input " +
 		"ON CONFLICT(name) DO NOTHING;"
 
-	_, err := r.dbContext.ExecContext(ctx, query, args)
+	_, err := r.Transaction.ExecContext(ctx, query, args)
 	if err != nil {
 		return err
 	}
@@ -64,7 +65,7 @@ func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
 		"ON CONFLICT(note_id, tag_id) DO NOTHING" +
 		"SELECT note_id, tag_id FROM input;"
 
-	_, err := r.dbContext.ExecContext(context.Background(), query, args)
+	_, err := r.Transaction.ExecContext(context.Background(), query, args)
 	if err != nil {
 		return err
 	}

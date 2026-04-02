@@ -17,13 +17,9 @@ type createNoteCommand struct {
 	Vars         map[string]string `json:"vars"`
 }
 
-type CreateNoteHandler struct {
-	uow *repositories.UnitOfWork
-}
+type CreateNoteHandler struct {}
 
-func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
-	return &CreateNoteHandler{uow: uow}
-}
+func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler 
 
 func (h CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var cmd createNoteCommand
