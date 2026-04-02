@@ -1,13 +1,11 @@
 package handlers
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"encoding/json"
 	"os"
 
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/files"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
