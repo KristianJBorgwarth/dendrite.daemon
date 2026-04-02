@@ -18,16 +18,18 @@ func newCreateNoteHandler() *handlers.CreateNoteHandler {
 }
 
 func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T) {
+	// Arrange
 	handler := newCreateNoteHandler()
 	notePath := filepath.Join(t.TempDir(), "my-note.md")
-
 	params, _ := json.Marshal(map[string]any{
 		"title": "My Note",
 		"path":  notePath,
 	})
 
+	// Act
 	result, err := handler.Handle(Fixture.TestContext, params)
 
+	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, notePath, result)
 
@@ -40,6 +42,7 @@ func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T
 }
 
 func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t *testing.T) {
+	// Arrange
 	handler := newCreateNoteHandler()
 	dir := t.TempDir()
 
@@ -53,8 +56,10 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 		"templatePath": templatePath,
 	})
 
+	// Act
 	result, err := handler.Handle(Fixture.TestContext, params)
 
+	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, notePath, result)
 
@@ -79,6 +84,7 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 }
 
 func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
+	// Arrange
 	dir := t.TempDir()
 
 	path1 := filepath.Join(dir, "dup-note.md")
@@ -88,7 +94,11 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 
 	path2 := filepath.Join(dir, "dup-note-moved.md")
 	params2, _ := json.Marshal(map[string]any{"title": "Dup Note", "path": path2})
+
+	// Act
 	_, err = newCreateNoteHandler().Handle(Fixture.TestContext, params2)
+
+	// Assert
 	require.NoError(t, err)
 
 	var count int
@@ -101,17 +111,28 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 }
 
 func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
-	_, err := newCreateNoteHandler().Handle(Fixture.TestContext, json.RawMessage(`{invalid json}`))
+	// Arrange
+	handler := newCreateNoteHandler()
+
+	// Act
+	_, err := handler.Handle(Fixture.TestContext, json.RawMessage(`{invalid json}`))
+
+	// Assert
 	assert.Error(t, err)
 }
 
 func TestCreateNoteHandler_NonExistentTemplatePath_ReturnsError(t *testing.T) {
+	// Arrange
+	handler := newCreateNoteHandler()
 	params, _ := json.Marshal(map[string]any{
 		"title":        "Ghost Note",
 		"path":         filepath.Join(t.TempDir(), "ghost.md"),
 		"templatePath": "/non/existent/template.md",
 	})
 
-	_, err := newCreateNoteHandler().Handle(Fixture.TestContext, params)
+	// Act
+	_, err := handler.Handle(Fixture.TestContext, params)
+
+	// Assert
 	assert.Error(t, err)
 }
