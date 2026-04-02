@@ -1,40 +1,49 @@
 package repositories
 
 import (
-	"context"
 	"database/sql"
+
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
-type DBContext interface {
-	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
-	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
-	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
-}
-
 type UnitOfWork struct {
-	db *sql.DB
+	db          *sql.DB
+	Transaction *sql.Tx
+	FileStore   *store.FileStore
 }
 
 func NewUnitOfWork(db *sql.DB) *UnitOfWork {
-	return &UnitOfWork{db: db}
+	return &UnitOfWork{db: db, FileStore: store.NewFileStore()}
 }
 
-func (u *UnitOfWork) Execute(ctx context.Context, fn func(tx *sql.Tx) error) (err error) {
-	transcation, err := u.db.BeginTx(ctx, nil)
+func (u *UnitOfWork) Begin() (tx *sql.Tx, err error) {
+	tx, err = u.db.Begin()
 	if err != nil {
+		return nil, err
+	}
+	u.Transaction = tx
+	return tx, nil
+}
+
+func (u *UnitOfWork) Commit() error {
+	if err := u.FileStore.Flush(); err != nil {
+		u.Transaction.Rollback()
+		u.Transaction = nil
 		return err
 	}
-
-	defer func() {
-		if err != nil {
-			_ = transcation.Rollback()
-		}
-	}()
-
-	if err = fn(transcation); err != nil {
+	if err := u.Transaction.Commit(); err != nil {
+		u.FileStore.Rollback()
+		u.Transaction = nil
 		return err
 	}
+	u.Transaction = nil
+	return nil
+}
 
-	err = transcation.Commit()
-	return err
+func (u *UnitOfWork) Rollback() {
+	if u.Transaction == nil {
+		return
+	}
+	u.Transaction.Rollback()
+	u.FileStore.Rollback()
 }
