@@ -1,61 +1,42 @@
 package frontmatter
 
 import (
-	"bufio"
 	"bytes"
-	"encoding/json"
 	"errors"
-	"io"
+	"gopkg.in/yaml.v3"
 )
 
 type FrontMatter struct {
-	Title   string
-	Tags    []string
-	Created string
-	Updated string
-	Author  string
+	Title   string   `yaml:"title"`
+	Tags    []string `yaml:"tags"`
+	Created string   `yaml:"created"`
+	Updated string   `yaml:"updated"`
+	Author  string   `yaml:"author"`
 }
 
-func parseFrontMatter(r io.Reader) (map[string]string, error) {
-	scanner := bufio.NewScanner(r)
-	frontMatter := make(map[string]string)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "---" {
-			break
-		}
-		parts := bytes.SplitN([]byte(line), []byte(":"), 2)
-		if len(parts) != 2 {
-			return nil, errors.New("invalid front matter format")
-		}
-		key := string(bytes.TrimSpace(parts[0]))
-		value := string(bytes.TrimSpace(parts[1]))
-		frontMatter[key] = value
-	}
-
-	if err := scanner.Err(); err != nil {
-		return nil, err
-	}
-
-	return frontMatter, nil
-}
-
-func ExtractTags(file []byte ) ([]string, error) {
-	r := bytes.NewReader(file)
-	frontMatter, err := parseFrontMatter(r)
+func ParseTags(file []byte) ([]string, error) {
+	fm, err := parseFrontMatter(file)
 	if err != nil {
 		return nil, err
 	}
-	tagsStr, ok := frontMatter["tags"]
-	if !ok {
-		return nil, nil
+	return fm.Tags, nil
+}
+
+func parseFrontMatter(file []byte) (*FrontMatter, error) {
+	content := bytes.TrimSpace(file)
+	if bytes.HasPrefix(content, []byte("---")) {
+		content = bytes.TrimSpace(content[3:])
+	} else {
+		return nil, errors.New("missing front matter delimiter")
 	}
-	
-	var tags []string
-	err = json.Unmarshal([]byte(tagsStr), &tags)
-	if err != nil {
+
+	if idx := bytes.Index(content, []byte("---")); idx != -1 {
+		content = bytes.TrimSpace(content[:idx])
+	}
+
+	var fm FrontMatter
+	if err := yaml.Unmarshal(content, &fm); err != nil {
 		return nil, err
 	}
-	return tags, nil
+	return &fm, nil
 }

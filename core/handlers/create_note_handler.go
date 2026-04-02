@@ -37,7 +37,7 @@ func (h CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
-	tags, err := frontmatter.ExtractTags(data)
+	tags, err := frontmatter.ParseTags(data)
 	if err != nil {
 		return nil, err
 	}
