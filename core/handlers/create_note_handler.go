@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
+	"github.com/google/uuid"
 )
 
 type createNoteCommand struct {
@@ -26,6 +28,7 @@ func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
 
 func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var cmd createNoteCommand
+
 	if err := json.Unmarshal(raw, &cmd); err != nil {
 		return nil, err
 	}
@@ -51,6 +54,11 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
 
+	tagModels := make([]models.Tag, len(tags))
+	for i, tag := range tags {
+		tagModels[i] = models.NewTag(uuidv7.New(), tag)
+	}
+
 	if err = tagRepo.Upsert(ctx, tags); err != nil {
 		return nil, err
 	}
@@ -58,6 +66,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	if err = noteRepo.Upsert(ctx, cmd.Title, cmd.Path, slug); err != nil {
 		return nil, err
 	}
+
 
 	h.uow.FileStore.Stage(cmd.Path, data)
 

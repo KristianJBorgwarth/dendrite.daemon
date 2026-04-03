@@ -1,7 +1,7 @@
 package models
 
 type Note struct {
-	id        int
+	id        string
 	path      string
 	title     string
 	slug      string
@@ -9,7 +9,7 @@ type Note struct {
 	updatedAt string
 }
 
-func NewNote(id int, path, title, slug, createdAt, updatedAt string) *Note {
+func NewNote(id, path, title, slug, createdAt, updatedAt string) *Note {
 	return &Note{
 		id:        id,
 		path:      path,
@@ -20,7 +20,7 @@ func NewNote(id int, path, title, slug, createdAt, updatedAt string) *Note {
 	}
 }
 
-func (n *Note) ID() int {
+func (n *Note) ID() string {
 	return n.id
 }
 

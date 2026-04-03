@@ -4,31 +4,33 @@ import (
 	"context"
 	"database/sql"
 	"strings"
+
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 )
 
-type TagRepository interface {
-	Upsert(ctx context.Context, names []string) error
+type ITagRepository interface {
+	Upsert(ctx context.Context, tags []models.Tag) error
 }
 
 type tagRepository struct {
 	Transaction *sql.Tx
 }
 
-func NewTagRepository(tx *sql.Tx) TagRepository {
+func NewTagRepository(tx *sql.Tx) ITagRepository {
 	return &tagRepository{Transaction: tx}
 }
 
-func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
-	if len(names) == 0 {
+func (r *tagRepository) Upsert(ctx context.Context, tags []models.Tag) error {
+	if len(tags) == 0 {
 		return nil
 	}
 
-	placeholders := make([]string, 0, len(names))
-	args := make([]any, 0, len(names))
+	placeholders := make([]string, 0, len(tags))
+	args := make([]any, 0, len(tags))
 
-	for _, name := range names {
-		placeholders = append(placeholders, "(?)")
-		args = append(args, name)
+	for _, tag := range tags {
+		placeholders = append(placeholders, "(?, ?)")
+		args = append(args, tag.ID(), tag.Name())
 	}
 
 	query := "INSERT OR IGNORE INTO tags(name) VALUES " + strings.Join(placeholders, ",")
