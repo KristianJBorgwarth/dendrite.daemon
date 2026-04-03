@@ -4,40 +4,43 @@ import (
 	"context"
 	"database/sql"
 	"strings"
+
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 )
 
-type TagRepository interface {
-	Upsert(ctx context.Context, names []string) error
+type ITagRepository interface {
+	Upsert(ctx context.Context, tags []*models.Tag) error
+	UpsertNoteTags(noteID string, tagIDs []string) error
 }
 
 type tagRepository struct {
 	Transaction *sql.Tx
 }
 
-func NewTagRepository(tx *sql.Tx) TagRepository {
+func NewTagRepository(tx *sql.Tx) ITagRepository {
 	return &tagRepository{Transaction: tx}
 }
 
-func (r *tagRepository) Upsert(ctx context.Context, names []string) error {
-	if len(names) == 0 {
+func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
+	if len(tags) == 0 {
 		return nil
 	}
 
-	placeholders := make([]string, 0, len(names))
-	args := make([]any, 0, len(names))
+	placeholders := make([]string, 0, len(tags))
+	args := make([]any, 0, len(tags))
 
-	for _, name := range names {
-		placeholders = append(placeholders, "(?)")
-		args = append(args, name)
+	for _, tag := range tags {
+		placeholders = append(placeholders, "(?, ?)")
+		args = append(args, tag.ID(), tag.Name())
 	}
 
-	query := "INSERT OR IGNORE INTO tags(name) VALUES " + strings.Join(placeholders, ",")
+	query := "INSERT OR IGNORE INTO tags(id, name) VALUES " + strings.Join(placeholders, ",")
 
 	_, err := r.Transaction.ExecContext(ctx, query, args...)
 	return err
 }
 
-func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
+func (r *tagRepository) UpsertNoteTags(noteID string, tagIDs []string) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}
@@ -50,12 +53,7 @@ func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
 		args = append(args, noteID, tagID)
 	}
 
-	query := "WITH input(note_id, tag_id) AS (VALUES " +
-		strings.Join(placeholders, ",") +
-		") INSERT INTO note_tags(note_id, tag_id) " +
-		"SELECT note_id, tag_id FROM input " +
-		"ON CONFLICT(note_id, tag_id) DO NOTHING" +
-		"SELECT note_id, tag_id FROM input;"
+	query := "INSERT OR IGNORE INTO note_tags(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
 
 	_, err := r.Transaction.ExecContext(context.Background(), query, args...)
 	if err != nil {

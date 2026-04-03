@@ -1,12 +1,12 @@
 package models
 
 type Link struct {
-	fromNoteID int
-	toNoteID   int
+	fromNoteID string
+	toNoteID   string
 	raw        string
 }
 
-func NewLink(fromNoteID, toNoteID int, raw string) *Link {
+func NewLink(fromNoteID, toNoteID, raw string) *Link {
 	return &Link{
 		fromNoteID: fromNoteID,
 		toNoteID:   toNoteID,
@@ -14,11 +14,11 @@ func NewLink(fromNoteID, toNoteID int, raw string) *Link {
 	}
 }
 
-func (l *Link) FromNoteID() int {
+func (l *Link) FromNoteID() string {
 	return l.fromNoteID
 }
 
-func (l *Link) ToNoteID() int {
+func (l *Link) ToNoteID() string {
 	return l.toNoteID
 }
 

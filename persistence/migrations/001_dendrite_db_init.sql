@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS notes (
-    id INTEGER PRIMARY KEY,
+    id TEXT PRIMARY KEY,
     path TEXT UNIQUE,
     title TEXT,
     slug TEXT UNIQUE NOT NULL,
@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS notes (
 );
 
 CREATE TABLE IF NOT EXISTS links (
-    from_note_id INTEGER NOT NULL,
-    to_note_id INTEGER NOT NULL,
+    from_note_id TEXT NOT NULL,
+    to_note_id TEXT NOT NULL,
     raw TEXT,
     FOREIGN KEY(from_note_id) REFERENCES notes(id) ON DELETE CASCADE,
     FOREIGN KEY(to_note_id) REFERENCES notes(id) ON DELETE CASCADE

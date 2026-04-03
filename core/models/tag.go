@@ -1,18 +1,33 @@
 package models
 
+import "github.com/google/uuid"
+
 type Tag struct {
-	id   int
+	id   string
 	name string
 }
 
-func NewTag(id int, name string) *Tag {
+func NewTag(name string) *Tag {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
+	}
 	return &Tag{
-		id:   id,
+		id:   id.String(),
 		name: name,
 	}
 }
 
-func (t *Tag) ID() int {
+func CreateTags(tags []string) ([]*Tag, error) {
+	tagModels := make([]*Tag, len(tags))
+	for i, tag := range tags {
+		tagModels[i] = NewTag(tag)
+	}
+
+	return tagModels, nil
+}
+
+func (t *Tag) ID() string {
 	return t.id
 }
 
