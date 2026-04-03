@@ -7,6 +7,7 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/utilities"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 	"github.com/google/uuid"
 )
@@ -56,17 +57,22 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	tagModels := make([]models.Tag, len(tags))
 	for i, tag := range tags {
-		tagModels[i] = models.NewTag(uuidv7.New(), tag)
+
+		id, err := uuid.NewV7()
+		if err != nil {
+			return nil, err
+		}
+
+		tagModels[i] = *models.NewTag(id.String(), tag)
 	}
 
-	if err = tagRepo.Upsert(ctx, tags); err != nil {
+	if err = tagRepo.Upsert(ctx, tagModels); err != nil {
 		return nil, err
 	}
 
 	if err = noteRepo.Upsert(ctx, cmd.Title, cmd.Path, slug); err != nil {
 		return nil, err
 	}
-
 
 	h.uow.FileStore.Stage(cmd.Path, data)
 

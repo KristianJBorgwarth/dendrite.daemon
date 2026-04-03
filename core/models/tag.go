@@ -1,15 +1,14 @@
 package models
 
-import "github.com/google/uuid"
 
 type Tag struct {
 	id   string
 	name string
 }
 
-func NewTag(id uuid.UUID, name string) *Tag {
+func NewTag(id string, name string) *Tag {
 	return &Tag{
-		id:   id.String(),
+		id:   id,
 		name: name,
 	}
 }

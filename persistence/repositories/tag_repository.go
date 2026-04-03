@@ -39,6 +39,7 @@ func (r *tagRepository) Upsert(ctx context.Context, tags []models.Tag) error {
 	return err
 }
 
+
 func (r *tagRepository) UpsertNoteTags(noteID int64, tagIDs []int64) error {
 	if len(tagIDs) == 0 {
 		return nil
