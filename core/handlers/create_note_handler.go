@@ -48,12 +48,13 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	if err != nil {
 		return nil, err
 	}
+
 	defer h.uow.Rollback()
 
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
 
-	tagModels, err := models.NewTags(tags)
+	tagModels, err := models.CreateTags(tags)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +63,9 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	if err = noteRepo.Upsert(ctx, cmd.Title, cmd.Path, slug); err != nil {
+	note := models.CreateNote(cmd.Path, cmd.Title, slug)
+
+	if err = noteRepo.Upsert(ctx, note); err != nil {
 		return nil, err
 	}
 

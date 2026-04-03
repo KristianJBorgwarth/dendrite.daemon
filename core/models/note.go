@@ -1,5 +1,11 @@
 package models
 
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
+
 type Note struct {
 	id        string
 	path      string
@@ -17,6 +23,21 @@ func NewNote(id, path, title, slug, createdAt, updatedAt string) *Note {
 		slug:      slug,
 		createdAt: createdAt,
 		updatedAt: updatedAt,
+	}
+}
+
+func CreateNote(path, title, slug string) *Note {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
+	}
+	return &Note{
+		id:        id.String(),
+		path:      path,
+		title:     title,
+		slug:      slug,
+		createdAt: time.Now().Format("2006-01-02 15:04:05"),
+		updatedAt: time.Now().Format("2006-01-02 15:04:05"),
 	}
 }
 

@@ -7,22 +7,21 @@ type Tag struct {
 	name string
 }
 
-func NewTag(id string, name string) *Tag {
+func NewTag(name string) *Tag {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
+	}
 	return &Tag{
-		id:   id,
+		id:   id.String(),
 		name: name,
 	}
 }
 
-func NewTags(tags []string) ([]*Tag, error) {
-
+func CreateTags(tags []string) ([]*Tag, error) {
 	tagModels := make([]*Tag, len(tags))
 	for i, tag := range tags {
-		id, err := uuid.NewV7()
-		if err != nil {
-			return nil, err
-		}
-		tagModels[i] = NewTag(id.String(), tag)
+		tagModels[i] = NewTag(tag)
 	}
 
 	return tagModels, nil

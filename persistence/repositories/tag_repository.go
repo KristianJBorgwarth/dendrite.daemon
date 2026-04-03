@@ -33,7 +33,7 @@ func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
 		args = append(args, tag.ID(), tag.Name())
 	}
 
-	query := "INSERT OR IGNORE INTO tags(name) VALUES " + strings.Join(placeholders, ",")
+	query := "INSERT OR IGNORE INTO tags(id, name) VALUES " + strings.Join(placeholders, ",")
 
 	_, err := r.Transaction.ExecContext(ctx, query, args...)
 	return err
