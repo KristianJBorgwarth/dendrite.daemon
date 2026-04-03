@@ -16,6 +16,7 @@ func RenderTemplate(templatePath string, title string, slug string) ([]byte, err
 		"{{title}}", title,
 		"{{date}}", time.Now().Format("2006-01-02"),
 		"{{slug}}", slug,
+		"{{file}}", slug+".md",
 	)
 
 	return []byte(r.Replace(string(template))), nil
