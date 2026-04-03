@@ -13,6 +13,7 @@ func main() {
 	server := server.NewServer()
 
 	server.RegisterHandler("initialize", handlers.NewInitializeHandler())
+	server.RegisterHandler("createNote", handlers.NewCreateNoteHandler())
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
 		slog.Error("server error", "error", err)

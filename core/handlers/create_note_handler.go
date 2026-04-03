@@ -26,7 +26,7 @@ func NewCreateNoteHandler() *CreateNoteHandler {
 	return &CreateNoteHandler{repositories.NewUnitOfWork()}
 }
 
-func (h *CreateNoteHandler) Handle(ctx context.Context, uow *repositories.UnitOfWork, raw json.RawMessage) (any, error) {
+func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var cmd createNoteCommand
 
 	if err := json.Unmarshal(raw, &cmd); err != nil {
@@ -45,12 +45,12 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, uow *repositories.UnitOf
 		return nil, err
 	}
 
-	tx, err := uow.Begin()
+	tx, err := h.uow.Begin()
 	if err != nil {
 		return nil, err
 	}
 
-	defer uow.Rollback()
+	defer h.uow.Rollback()
 
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
@@ -74,9 +74,9 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, uow *repositories.UnitOf
 		return nil, err
 	}
 
-	uow.FileStore.Stage(cmd.Path, data)
+	h.uow.FileStore.Stage(cmd.Path, data)
 
-	if err = uow.Commit(); err != nil {
+	if err = h.uow.Commit(); err != nil {
 		return nil, err
 	}
 
