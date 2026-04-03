@@ -12,14 +12,18 @@ type initializeCommand struct {
 
 type InitializeHandler struct{}
 
-func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
-	var params initializeCommand
+func NewInitializeHandler() *InitializeHandler {
+	return &InitializeHandler{}
+}
 
-	if err := json.Unmarshal(raw, &params); err != nil {
+func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
+	var cmd initializeCommand
+
+	if err := json.Unmarshal(raw, &cmd); err != nil {
 		return nil, err
 	}
 
-	err := persistence.InitializeIndex(params.VaultPath)
+	err := persistence.InitializeDBContext(cmd.VaultPath)
 	if err != nil {
 		return nil, err
 	}

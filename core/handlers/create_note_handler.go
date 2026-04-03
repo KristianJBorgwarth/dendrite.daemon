@@ -18,12 +18,12 @@ type createNoteCommand struct {
 	Vars         map[string]string `json:"vars"`
 }
 
-type CreateNoteHandler struct {
+type CreateNoteHandler struct{
 	uow *repositories.UnitOfWork
 }
 
-func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
-	return &CreateNoteHandler{uow: uow}
+func NewCreateNoteHandler() *CreateNoteHandler {
+	return &CreateNoteHandler{repositories.NewUnitOfWork()}
 }
 
 func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -70,7 +70,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	if err = tagRepo.UpsertNoteTags(note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
+	if err = tagRepo.UpsertNoteTags(ctx, note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
 		return nil, err
 	}
 

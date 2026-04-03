@@ -22,7 +22,7 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) Register(method string, handler handlers.Handler) {
+func (s *Server) RegisterHandler(method string, handler handlers.Handler) {
 	s.handlers[method] = handler
 }
 
