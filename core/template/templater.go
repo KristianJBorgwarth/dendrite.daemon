@@ -1,11 +1,3 @@
-package templatepackage template
-
-import (
-	"os"
-	"strings"
-	"time"
-)
-
 package template
 
 import (
@@ -15,7 +7,7 @@ import (
 )
 
 func RenderTemplate(templatePath string, title string, slug string) ([]byte, error) {
-	tmpl, err := readTemplate(templatePath, title)
+	template, err := readTemplate(templatePath, title)
 	if err != nil {
 		return nil, err
 	}
@@ -26,17 +18,22 @@ func RenderTemplate(templatePath string, title string, slug string) ([]byte, err
 		"{{slug}}", slug,
 	)
 
-	return []byte(r.Replace(string(tmpl))), nil
+	return []byte(r.Replace(string(template))), nil
 }
 
 func readTemplate(templatePath string, title string) ([]byte, error) {
-	if _, err := os.Stat(templatePath); os.IsNotExist(err) {
+	if templatePath == "" {
 		return createDefaultTemplate(title), nil
 	}
-	return os.ReadFile(templatePath)
+
+	template, err := os.ReadFile(templatePath)
+	if err != nil {
+		return nil, err
+	}
+
+	return template, nil
 }
 
 func createDefaultTemplate(title string) []byte {
 	return []byte("---\ntitle: " + title + "\ndate: " + time.Now().Format("2006-01-02") + "\n---\n")
 }
-

@@ -30,7 +30,9 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	data, err := template.RenderTemplate(cmd.TemplatePath, cmd.Title)
+	slug := frontmatter.Slugify(cmd.Title)
+
+	data, err := template.RenderTemplate(cmd.TemplatePath, cmd.Title, slug)
 	if err != nil {
 		return nil, err
 	}
