@@ -4,6 +4,7 @@ package server
 import (
 	"bufio"
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,6 +14,7 @@ import (
 )
 
 type Server struct {
+	db *sql.DB
 	handlers map[string]handlers.Handler
 }
 
@@ -22,7 +24,7 @@ func NewServer() *Server {
 	}
 }
 
-func (s *Server) Register(method string, handler handlers.Handler) {
+func (s *Server) RegisterHandler(method string, handler handlers.Handler) {
 	s.handlers[method] = handler
 }
 
@@ -71,6 +73,9 @@ func (s *Server) handle(w io.Writer, req rpc.Request) {
 	}
 
 	s.respond(w, req.ID, result, nil)
+}
+
+func (s *Server) initalize(){
 }
 
 func (s *Server) respond(w io.Writer, id *int, result any, err *rpc.Error) {

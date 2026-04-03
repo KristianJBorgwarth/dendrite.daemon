@@ -18,15 +18,13 @@ type createNoteCommand struct {
 	Vars         map[string]string `json:"vars"`
 }
 
-type CreateNoteHandler struct {
-	uow *repositories.UnitOfWork
+type CreateNoteHandler struct{}
+
+func NewCreateNoteHandler() *CreateNoteHandler {
+	return &CreateNoteHandler{}
 }
 
-func NewCreateNoteHandler(uow *repositories.UnitOfWork) *CreateNoteHandler {
-	return &CreateNoteHandler{uow: uow}
-}
-
-func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
+func (h *CreateNoteHandler) Handle(ctx context.Context, uow *repositories.UnitOfWork, raw json.RawMessage) (any, error) {
 	var cmd createNoteCommand
 
 	if err := json.Unmarshal(raw, &cmd); err != nil {
@@ -45,12 +43,12 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	tx, err := h.uow.Begin()
+	tx, err := uow.Begin()
 	if err != nil {
 		return nil, err
 	}
 
-	defer h.uow.Rollback()
+	defer uow.Rollback()
 
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
@@ -74,9 +72,9 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	h.uow.FileStore.Stage(cmd.Path, data)
+	uow.FileStore.Stage(cmd.Path, data)
 
-	if err = h.uow.Commit(); err != nil {
+	if err = uow.Commit(); err != nil {
 		return nil, err
 	}
 

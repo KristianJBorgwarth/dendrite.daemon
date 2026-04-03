@@ -12,6 +12,10 @@ type initializeCommand struct {
 
 type InitializeHandler struct{}
 
+func NewInitializeHandler() *InitializeHandler {
+	return &InitializeHandler{}
+}
+
 func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var params initializeCommand
 
@@ -19,7 +23,7 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
-	err := persistence.InitializeIndex(params.VaultPath)
+	_, err := persistence.InitializeIndex(params.VaultPath)
 	if err != nil {
 		return nil, err
 	}

@@ -12,12 +12,12 @@ import (
 //go:embed migrations/*.sql
 var migrationsFS embed.FS
 
-func InitializeIndex(vaultPath string) error {
+func InitializeIndex(vaultPath string) (*sql.DB, error) {
 	indexDir := filepath.Join(vaultPath, ".index")
 
 	if err := os.MkdirAll(indexDir, 0755); err != nil {
 		slog.Error("failed to create index directory", "error", err)
-		return err
+		return nil, err
 	}
 
 	dbPath := filepath.Join(indexDir, "index.db")
@@ -25,17 +25,16 @@ func InitializeIndex(vaultPath string) error {
 	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		slog.Error("failed to open database", "error", err)
-		return err
+		return nil, err
 	}
 
-	defer db.Close()
 
 	if err := applyMigrations(db); err != nil {
 		slog.Error("failed to apply migrations", "error", err)
-		return err
+		return nil, err
 	}
 
-	return nil
+	return db, nil
 }
 
 func applyMigrations(db *sql.DB) error {

@@ -12,7 +12,7 @@ import (
 func main() {
 	server := server.NewServer()
 
-	server.Register("initialize", handlers.InitializeHandler{})
+	server.RegisterHandler("initialize", handlers.NewInitializeHandler())
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
 		slog.Error("server error", "error", err)

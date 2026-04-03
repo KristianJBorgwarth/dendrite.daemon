@@ -22,17 +22,12 @@ type DBFixture struct {
 func NewDBFixture() *DBFixture {
 	vaultPath := os.TempDir()
 
-	err := persistence.InitializeIndex(vaultPath)
+	db, err := persistence.InitializeIndex(vaultPath)
 	if err != nil {
 		panic(err)
 	}
 
 	dbPath := filepath.Join(os.TempDir(), ".index", "index.db")
-
-	db, err := sql.Open("sqlite", dbPath)
-	if err != nil {
-		panic(err)
-	}
 
 	return &DBFixture{
 		DB:          db,
