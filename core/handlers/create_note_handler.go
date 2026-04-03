@@ -68,7 +68,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, uow *repositories.UnitOf
 		return nil, err
 	}
 
-	if err = tagRepo.UpsertNoteTags(note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
+	if err = tagRepo.UpsertNoteTags(ctx, note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
 		return nil, err
 	}
 
