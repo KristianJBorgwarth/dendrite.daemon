@@ -10,7 +10,7 @@ import (
 
 type ITagRepository interface {
 	Upsert(ctx context.Context, tags []*models.Tag) error
-	UpsertNoteTags(noteID string, tagIDs []string) error
+	UpsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
 }
 
 type tagRepository struct {
@@ -40,7 +40,7 @@ func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
 	return err
 }
 
-func (r *tagRepository) UpsertNoteTags(noteID string, tagIDs []string) error {
+func (r *tagRepository) UpsertNoteTags(ctx context.Context ,noteID string, tagIDs []string) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}
@@ -55,7 +55,7 @@ func (r *tagRepository) UpsertNoteTags(noteID string, tagIDs []string) error {
 
 	query := "INSERT OR IGNORE INTO note_tags(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
 
-	_, err := r.Transaction.ExecContext(context.Background(), query, args...)
+	_, err := r.Transaction.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
