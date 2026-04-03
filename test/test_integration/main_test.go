@@ -22,15 +22,20 @@ type DBFixture struct {
 func NewDBFixture() *DBFixture {
 	vaultPath := os.TempDir()
 
-	db, err := persistence.InitializeIndex(vaultPath)
+	err := persistence.InitializeDBContext(vaultPath)
 	if err != nil {
 		panic(err)
 	}
 
 	dbPath := filepath.Join(os.TempDir(), ".index", "index.db")
 
+	dbContext, err := persistence.GetDBContext()
+	if err != nil {
+		panic("failed to get DB context: " + err.Error())
+	}
+
 	return &DBFixture{
-		DB:          db,
+		DB:          dbContext.DB,
 		DBPath:      dbPath,
 		TestContext: context.Background(),
 	}

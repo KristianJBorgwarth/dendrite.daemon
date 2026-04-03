@@ -17,13 +17,13 @@ func NewInitializeHandler() *InitializeHandler {
 }
 
 func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
-	var params initializeCommand
+	var cmd initializeCommand
 
-	if err := json.Unmarshal(raw, &params); err != nil {
+	if err := json.Unmarshal(raw, &cmd); err != nil {
 		return nil, err
 	}
 
-	_, err := persistence.InitializeIndex(params.VaultPath)
+	err := persistence.InitializeDBContext(cmd.VaultPath)
 	if err != nil {
 		return nil, err
 	}

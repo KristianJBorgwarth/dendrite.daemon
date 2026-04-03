@@ -5,8 +5,11 @@ go 1.26
 require (
 	github.com/google/uuid v1.6.0
 	github.com/stretchr/testify v1.11.1
+	golang.org/x/tools v0.42.0
 	modernc.org/sqlite v1.47.0
 )
+
+require github.com/yuin/goldmark v1.4.13 // indirect
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect

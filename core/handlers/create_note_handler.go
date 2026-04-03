@@ -18,10 +18,12 @@ type createNoteCommand struct {
 	Vars         map[string]string `json:"vars"`
 }
 
-type CreateNoteHandler struct{}
+type CreateNoteHandler struct{
+	uow *repositories.UnitOfWork
+}
 
 func NewCreateNoteHandler() *CreateNoteHandler {
-	return &CreateNoteHandler{}
+	return &CreateNoteHandler{repositories.NewUnitOfWork()}
 }
 
 func (h *CreateNoteHandler) Handle(ctx context.Context, uow *repositories.UnitOfWork, raw json.RawMessage) (any, error) {

@@ -16,7 +16,7 @@ import (
 func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	uow := repositories.NewUnitOfWork(Fixture.DB)
+	uow := repositories.NewUnitOfWork()
 	notePath := filepath.Join(t.TempDir(), "my-note.md")
 	params, _ := json.Marshal(map[string]any{
 		"title": "My Note",
@@ -41,7 +41,7 @@ func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T
 func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	uow := repositories.NewUnitOfWork(Fixture.DB)
+	uow := repositories.NewUnitOfWork()
 	dir := t.TempDir()
 
 	templatePath := filepath.Join(dir, "template.md")
@@ -85,8 +85,8 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 	// Arrange
 	dir := t.TempDir()
 	handler := handlers.NewCreateNoteHandler()
-	uowInit := repositories.NewUnitOfWork(Fixture.DB)
-	secondUow := repositories.NewUnitOfWork(Fixture.DB)
+	uowInit := repositories.NewUnitOfWork()
+	secondUow := repositories.NewUnitOfWork()
 
 	path1 := filepath.Join(dir, "dup-note.md")
 	params1, _ := json.Marshal(map[string]any{"title": "Dup Note", "path": path1})
@@ -114,7 +114,7 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	uow := repositories.NewUnitOfWork(Fixture.DB)
+	uow := repositories.NewUnitOfWork()
 
 	// Act
 	_, err := handler.Handle(Fixture.TestContext, uow, json.RawMessage(`{invalid json}`))
@@ -126,7 +126,7 @@ func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
 func TestCreateNoteHandler_NonExistentTemplatePath_ReturnsError(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	uow := repositories.NewUnitOfWork(Fixture.DB)
+	uow := repositories.NewUnitOfWork()
 	params, _ := json.Marshal(map[string]any{
 		"title":        "Ghost Note",
 		"path":         filepath.Join(t.TempDir(), "ghost.md"),
