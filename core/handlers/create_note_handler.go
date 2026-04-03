@@ -55,7 +55,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	if err = noteRepo.Upsert(ctx, cmd.Title, cmd.Path, frontmatter.Slugify(cmd.Title)); err != nil {
+	if err = noteRepo.Upsert(ctx, cmd.Title, cmd.Path, slug); err != nil {
 		return nil, err
 	}
 
