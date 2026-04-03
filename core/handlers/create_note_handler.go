@@ -8,7 +8,6 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
-	"github.com/google/uuid"
 )
 
 type createNoteCommand struct {
