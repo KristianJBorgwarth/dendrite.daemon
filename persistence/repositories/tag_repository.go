@@ -9,7 +9,7 @@ import (
 )
 
 type ITagRepository interface {
-	Upsert(ctx context.Context, tags []models.Tag) error
+	Upsert(ctx context.Context, tags []*models.Tag) error
 }
 
 type tagRepository struct {
@@ -20,7 +20,7 @@ func NewTagRepository(tx *sql.Tx) ITagRepository {
 	return &tagRepository{Transaction: tx}
 }
 
-func (r *tagRepository) Upsert(ctx context.Context, tags []models.Tag) error {
+func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
