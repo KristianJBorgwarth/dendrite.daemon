@@ -7,6 +7,7 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -66,6 +67,10 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	note := models.CreateNote(cmd.Path, cmd.Title, slug)
 
 	if err = noteRepo.Upsert(ctx, note); err != nil {
+		return nil, err
+	}
+
+	if err = tagRepo.UpsertNoteTags(note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
 		return nil, err
 	}
 
