@@ -30,13 +30,9 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	data, err := template.GenerateTemplate(cmd.TemplatePath)
+	data, err := template.RenderTemplate(cmd.TemplatePath, cmd.Title)
 	if err != nil {
 		return nil, err
-	}
-
-	if data == nil {
-		data = []byte("---\ntitle: " + cmd.Title + "\ntags: []\n---\n")
 	}
 
 	tags, err := frontmatter.ParseTags(data)
