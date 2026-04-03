@@ -21,11 +21,11 @@ func InitializeDBContext(vaultPath string) (error) {
 	return nil
 }
 
-func GetDBContext() (*DBContext, error) {
+func GetDBContext() (*DBContext) {
 	if dbContext == nil {
 		panic("DBContext is not initialized. Call InitializeDbContext first.")
 	}
-	return dbContext, nil
+	return dbContext 
 }
 
 func CloseDBContext() error {

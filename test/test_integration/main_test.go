@@ -29,10 +29,7 @@ func NewDBFixture() *DBFixture {
 
 	dbPath := filepath.Join(os.TempDir(), ".index", "index.db")
 
-	dbContext, err := persistence.GetDBContext()
-	if err != nil {
-		panic("failed to get DB context: " + err.Error())
-	}
+	dbContext := persistence.GetDBContext()
 
 	return &DBFixture{
 		DB:          dbContext.DB,

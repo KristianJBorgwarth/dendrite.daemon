@@ -15,7 +15,6 @@ type createNoteCommand struct {
 	Title        string            `json:"title"`
 	TemplatePath string            `json:"templatePath"`
 	Path         string            `json:"path"`
-	Vars         map[string]string `json:"vars"`
 }
 
 type CreateNoteHandler struct{
