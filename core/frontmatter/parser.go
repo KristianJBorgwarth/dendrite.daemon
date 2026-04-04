@@ -7,11 +7,11 @@ import (
 )
 
 type FrontMatter struct {
-	Title   string   `yaml:"title"`
-	Tags    []string `yaml:"tags"`
-	Created string   `yaml:"created"`
-	Updated string   `yaml:"updated"`
-	Author  string   `yaml:"author"`
+	Title   string   `yaml:"Title"`
+	Tags    []string `yaml:"Tags"`
+	Created string   `yaml:"Created"`
+	Updated string   `yaml:"Updated"`
+	Author  string   `yaml:"Author"`
 }
 
 func ParseTags(file []byte) ([]string, error) {
