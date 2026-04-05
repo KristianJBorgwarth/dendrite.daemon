@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
@@ -44,6 +45,8 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
+	slog.Debug("parsed tags", "tags", tags)
+
 	tx, err := h.uow.Begin()
 	if err != nil {
 		return nil, err
@@ -58,6 +61,8 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	if err != nil {
 		return nil, err
 	}
+
+	slog.Debug("Creating tags", "tags", tags)
 
 	if err = tagRepo.Upsert(ctx, tagModels); err != nil {
 		return nil, err
