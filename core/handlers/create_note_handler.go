@@ -40,6 +40,8 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
+	slog.Debug("rendered template", "data", string(data))
+
 	tags, err := frontmatter.ParseTags(data)
 	if err != nil {
 		return nil, err

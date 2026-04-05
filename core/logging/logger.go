@@ -2,7 +2,6 @@
 package logging
 
 import (
-	"io"
 	"log/slog"
 	"os"
 )
@@ -13,9 +12,7 @@ func Init() {
 		panic(err)
 	}
 
-	writer := io.MultiWriter(os.Stdout, logFile)
-
-	handler := slog.NewTextHandler(writer, &slog.HandlerOptions{
+	handler := slog.NewTextHandler(logFile, &slog.HandlerOptions{
 		Level: slog.LevelDebug,
 	})
 

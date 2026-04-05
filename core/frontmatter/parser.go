@@ -3,6 +3,8 @@ package frontmatter
 import (
 	"bytes"
 	"errors"
+	"log/slog"
+
 	"gopkg.in/yaml.v3"
 )
 
@@ -19,6 +21,7 @@ func ParseTags(file []byte) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	slog.Debug("parsed front matter", "fm", fm)
 	return fm.Tags, nil
 }
 
@@ -33,6 +36,7 @@ func parseFrontMatter(file []byte) (*FrontMatter, error) {
 	if idx := bytes.Index(content, []byte("---")); idx != -1 {
 		content = bytes.TrimSpace(content[:idx])
 	}
+	slog.Debug("yaml content to parse", "content", string(content))
 
 	var fm FrontMatter
 	if err := yaml.Unmarshal(content, &fm); err != nil {
