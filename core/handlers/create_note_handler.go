@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
@@ -15,7 +16,6 @@ type createNoteCommand struct {
 	Title        string            `json:"title"`
 	TemplatePath string            `json:"templatePath"`
 	Path         string            `json:"path"`
-	Vars         map[string]string `json:"vars"`
 }
 
 type CreateNoteHandler struct{
@@ -40,10 +40,14 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
+	slog.Debug("rendered template", "data", string(data))
+
 	tags, err := frontmatter.ParseTags(data)
 	if err != nil {
 		return nil, err
 	}
+
+	slog.Debug("parsed tags", "tags", tags)
 
 	tx, err := h.uow.Begin()
 	if err != nil {
@@ -59,6 +63,8 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	if err != nil {
 		return nil, err
 	}
+
+	slog.Debug("Creating tags", "tags", tags)
 
 	if err = tagRepo.Upsert(ctx, tagModels); err != nil {
 		return nil, err

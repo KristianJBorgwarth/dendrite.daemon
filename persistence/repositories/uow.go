@@ -8,21 +8,17 @@ import (
 )
 
 type UnitOfWork struct {
-	dbContext   *sql.DB
 	Transaction *sql.Tx
 	FileStore   *store.FileStore
 }
 
 func NewUnitOfWork() *UnitOfWork {
-	db, err := persistence.GetDBContext()
-	if err != nil {
-		panic("failed to get DB context: " + err.Error())
-	}
-	return &UnitOfWork{dbContext: db.DB, FileStore: store.NewFileStore()}
+	return &UnitOfWork{FileStore: store.NewFileStore()}
 }
 
 func (u *UnitOfWork) Begin() (tx *sql.Tx, err error) {
-	tx, err = u.dbContext.Begin()
+	dbContext := persistence.GetDBContext()
+	tx, err = dbContext.DB.Begin() 
 	if err != nil {
 		return nil, err
 	}

@@ -5,11 +5,13 @@ import (
 	"os"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/logging"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/server"
 	_ "modernc.org/sqlite"
 )
 
 func main() {
+	logging.Init()
 	server := server.NewServer()
 
 	server.RegisterHandler("initialize", handlers.NewInitializeHandler())
