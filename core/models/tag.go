@@ -7,13 +7,9 @@ type Tag struct {
 	name string
 }
 
-func NewTag(name string) *Tag {
-	id, err := uuid.NewV7()
-	if err != nil {
-		panic(err)
-	}
+func NewTag(id, name string) *Tag {
 	return &Tag{
-		id:   id.String(),
+		id:   id,
 		name: name,
 	}
 }
@@ -21,7 +17,11 @@ func NewTag(name string) *Tag {
 func CreateTags(tags []string) ([]*Tag, error) {
 	tagModels := make([]*Tag, len(tags))
 	for i, tag := range tags {
-		tagModels[i] = NewTag(tag)
+		id, err := uuid.NewV7()
+		if err != nil {
+			panic(err)
+		}
+		tagModels[i] = NewTag(id.String(), tag)
 	}
 
 	return tagModels, nil

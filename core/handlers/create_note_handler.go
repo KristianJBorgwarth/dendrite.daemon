@@ -3,7 +3,6 @@ package handlers
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
@@ -13,12 +12,12 @@ import (
 )
 
 type createNoteCommand struct {
-	Title        string            `json:"title"`
-	TemplatePath string            `json:"templatePath"`
-	Path         string            `json:"path"`
+	Title        string `json:"title"`
+	TemplatePath string `json:"templatePath"`
+	Path         string `json:"path"`
 }
 
-type CreateNoteHandler struct{
+type CreateNoteHandler struct {
 	uow *repositories.UnitOfWork
 }
 
@@ -40,14 +39,10 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	slog.Debug("rendered template", "data", string(data))
-
 	tags, err := frontmatter.ParseTags(data)
 	if err != nil {
 		return nil, err
 	}
-
-	slog.Debug("parsed tags", "tags", tags)
 
 	tx, err := h.uow.Begin()
 	if err != nil {
@@ -59,16 +54,30 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
 
-	tagModels, err := models.CreateTags(tags)
+	dbTags, err := tagRepo.GetByNames(ctx, tags)
 	if err != nil {
 		return nil, err
 	}
 
-	slog.Debug("Creating tags", "tags", tags)
+	newTags := utils.Filter(tags, func(name string) bool {
+		for _, t := range dbTags {
+			if t.Name() == name {
+				return false
+			}
+		}
+		return true
+	})
+
+	tagModels, err := models.CreateTags(newTags)
+	if err != nil {
+		return nil, err
+	}
 
 	if err = tagRepo.Upsert(ctx, tagModels); err != nil {
 		return nil, err
 	}
+
+	tagModels = append(tagModels, dbTags...)
 
 	note := models.CreateNote(cmd.Path, cmd.Title, slug)
 

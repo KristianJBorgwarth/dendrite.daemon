@@ -11,6 +11,7 @@ import (
 type ITagRepository interface {
 	Upsert(ctx context.Context, tags []*models.Tag) error
 	UpsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
+	GetByNames(ctx context.Context, names []string) ([]*models.Tag, error)
 }
 
 type tagRepository struct {
@@ -61,4 +62,38 @@ func (r *tagRepository) UpsertNoteTags(ctx context.Context ,noteID string, tagID
 	}
 
 	return nil
+}
+
+func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*models.Tag, error) {
+	if len(names) == 0 {
+		return []*models.Tag{}, nil
+	}
+
+	placeholders := make([]string, 0, len(names))
+	args := make([]any, 0, len(names))
+
+	for _, name := range names {
+		placeholders = append(placeholders, "?")
+		args = append(args, name)
+	}
+
+	query := "SELECT id, name FROM tags WHERE name IN (" + strings.Join(placeholders, ",") + ")"
+
+	rows, err := r.Transaction.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []*models.Tag
+	for rows.Next() {
+		var id string
+		var name string
+		if err := rows.Scan(&id, &name); err != nil {
+			return nil, err
+		}
+		tags = append(tags, models.NewTag(id, name))
+	}
+
+	return tags, nil
 }
