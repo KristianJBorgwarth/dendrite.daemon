@@ -5,9 +5,8 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
+	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
@@ -34,24 +33,12 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	slug := frontmatter.Slugify(cmd.Title)
-
-	var templatePath string
-	if cmd.TemplateName != "" {
-		templatePath = store.GetVaultStore().GetTemplatePath(cmd.TemplateName)
-	}
-
-	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, slug+".md")
-
-	data, err := template.RenderTemplate(templatePath, cmd.Title, slug)
+	template, err := filehandling.NewTemplate(cmd.TemplateName, cmd.Title)
 	if err != nil {
 		return nil, err
 	}
 
-	tags, err := frontmatter.ParseTags(data)
-	if err != nil {
-		return nil, err
-	}
+	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, template.Slug+".md")
 
 	tx, err := h.uow.Begin()
 	if err != nil {
@@ -63,12 +50,12 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
 
-	dbTags, err := tagRepo.GetByNames(ctx, tags)
+	dbTags, err := tagRepo.GetByNames(ctx, template.FrontMatter.Tags)
 	if err != nil {
 		return nil, err
 	}
 
-	newTags := utils.Filter(tags, func(name string) bool {
+	newTags := utils.Filter(template.FrontMatter.Tags, func(name string) bool {
 		for _, t := range dbTags {
 			if t.Name() == name {
 				return false
@@ -88,7 +75,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	tagModels = append(tagModels, dbTags...)
 
-	note := models.CreateNote(notePath, cmd.Title, slug)
+	note := models.CreateNote(notePath, cmd.Title, template.Slug)
 
 	if err = noteRepo.Upsert(ctx, note); err != nil {
 		return nil, err
@@ -98,7 +85,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	h.uow.FileStore.Stage(notePath, data)
+	h.uow.FileStore.Stage(notePath, template.Content)
 
 	if err = h.uow.Commit(); err != nil {
 		return nil, err

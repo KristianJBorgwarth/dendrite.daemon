@@ -1,9 +1,9 @@
-package frontmatter_test
+package filehandling
 
 import (
 	"testing"
 
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
+	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -15,10 +15,11 @@ tags: ["test", "note"]
 ---
 This is the content of the note.`
 
-	result, err := frontmatter.ParseTags([]byte(input))
+	result, err := filehandling.ParseFrontMatter([]byte(input))
 
 	require.NoError(t, err)
-	assert.Equal(t, []string{"test", "note"}, result)
+	assert.Equal(t, "My Note", result.Title)
+	assert.Equal(t, []string{"test", "note"}, result.Tags)
 }
 
 func TestParseTags_MissingDelimiter_ReturnsError(t *testing.T) {
@@ -26,7 +27,7 @@ func TestParseTags_MissingDelimiter_ReturnsError(t *testing.T) {
 tags: ["test", "note"]
 This is the content of the note.`
 
-	_, err := frontmatter.ParseTags([]byte(input))
+	_, err := filehandling.ParseFrontMatter([]byte(input))
 
 	assert.ErrorContains(t, err, "missing front matter delimiter")
 }
