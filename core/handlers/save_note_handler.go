@@ -9,7 +9,7 @@ import (
 
 type saveNoteCommand struct {
 	Title     string   `json:"title"`
-	Content   string   `json:"content"`
+	Path      string   `json:"path"`
 	Directory string   `json:"directory"`
 	Tags      []string `json:"tags"`
 }
