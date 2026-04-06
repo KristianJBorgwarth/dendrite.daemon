@@ -18,7 +18,8 @@ func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T
 	notePath := filepath.Join(t.TempDir(), "my-note.md")
 	params, _ := json.Marshal(map[string]any{
 		"title": "My Note",
-		"path":  notePath,
+		"templateName": "",
+		"directory": "",
 	})
 
 	// Act

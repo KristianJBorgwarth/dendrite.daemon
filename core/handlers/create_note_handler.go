@@ -36,6 +36,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	slug := frontmatter.Slugify(cmd.Title)
 
 	templatePath := store.GetVaultStore().GetTemplatePath(cmd.TemplateName)
+	notePath := store.GetVaultStore().Config.VaultPath() + "/" + cmd.Directory + "/" + slug + ".md"
 
 	data, err := template.RenderTemplate(templatePath, cmd.Title, slug)
 	if err != nil {
@@ -82,7 +83,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	tagModels = append(tagModels, dbTags...)
 
-	note := models.CreateNote(cmd.Directory, cmd.Title, slug)
+	note := models.CreateNote(notePath, cmd.Title, slug)
 
 	if err = noteRepo.Upsert(ctx, note); err != nil {
 		return nil, err
