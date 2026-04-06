@@ -15,15 +15,7 @@ type FrontMatter struct {
 	Author  string   `yaml:"author"`
 }
 
-func ParseTags(file []byte) ([]string, error) {
-	fm, err := parseFrontMatter(file)
-	if err != nil {
-		return nil, err
-	}
-	return fm.Tags, nil
-}
-
-func parseFrontMatter(file []byte) (*FrontMatter, error) {
+func ParseFrontMatter(file []byte) (*FrontMatter, error) {
 	content := bytes.TrimSpace(file)
 	if bytes.HasPrefix(content, []byte("---")) {
 		content = bytes.TrimSpace(content[3:])
