@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"encoding/json"
+	"path/filepath"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
@@ -35,7 +36,12 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	slug := frontmatter.Slugify(cmd.Title)
 
-	templatePath := store.GetVaultStore().GetTemplatePath(cmd.TemplateName)
+	var templatePath string
+	if cmd.TemplateName != "" {
+		templatePath = store.GetVaultStore().GetTemplatePath(cmd.TemplateName)
+	}
+
+	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, slug+".md")
 
 	data, err := template.RenderTemplate(templatePath, cmd.Title, slug)
 	if err != nil {
@@ -82,7 +88,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	tagModels = append(tagModels, dbTags...)
 
-	note := models.CreateNote(cmd.Directory, cmd.Title, slug)
+	note := models.CreateNote(notePath, cmd.Title, slug)
 
 	if err = noteRepo.Upsert(ctx, note); err != nil {
 		return nil, err
@@ -92,11 +98,11 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	h.uow.FileStore.Stage(cmd.Directory, data)
+	h.uow.FileStore.Stage(notePath, data)
 
 	if err = h.uow.Commit(); err != nil {
 		return nil, err
 	}
 
-	return cmd.Directory, nil
+	return notePath, nil
 }

@@ -14,11 +14,13 @@ import (
 func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	
-	notePath := filepath.Join(t.TempDir(), "my-note.md")
+
+	vaultPath := Fixture.VaultStore.Config.VaultPath()
+	notePath := filepath.Join(vaultPath, "my-note.md")
 	params, _ := json.Marshal(map[string]any{
-		"title": "My Note",
-		"path":  notePath,
+		"title":        "My Note",
+		"templateName": "",
+		"directory":    "",
 	})
 
 	// Act
@@ -39,16 +41,23 @@ func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T
 func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	dir := t.TempDir()
 
-	templatePath := filepath.Join(dir, "template.md")
+	vaultPath := Fixture.VaultStore.Config.VaultPath()
+	templateDir := Fixture.VaultStore.Config.TemplateDirectory()
+	require.NoError(t, os.MkdirAll(templateDir, 0o755))
+
+	templatePath := filepath.Join(templateDir, "template.md")
 	require.NoError(t, os.WriteFile(templatePath, []byte("---\ntitle: Template\ntags: [go, testing]\n---\n"), 0o644))
+	defer os.Remove(templatePath)
 
-	notePath := filepath.Join(dir, "templated-note.md")
+	subDir := "subdir"
+	require.NoError(t, os.MkdirAll(filepath.Join(vaultPath, subDir), 0o755))
+	defer os.RemoveAll(filepath.Join(vaultPath, subDir))
+	notePath := filepath.Join(vaultPath, subDir, "templated-note.md")
 	params, _ := json.Marshal(map[string]any{
 		"title":        "Templated Note",
-		"path":         notePath,
-		"templatePath": templatePath,
+		"templateName": "template.md",
+		"directory":    subDir,
 	})
 
 	// Act
@@ -80,17 +89,21 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 
 func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 	// Arrange
-	dir := t.TempDir()
 	handler := handlers.NewCreateNoteHandler()
-	
 
-	path1 := filepath.Join(dir, "dup-note.md")
-	params1, _ := json.Marshal(map[string]any{"title": "Dup Note", "path": path1})
+	vaultPath := Fixture.VaultStore.Config.VaultPath()
+	subDir := "dup-dir"
+	require.NoError(t, os.MkdirAll(filepath.Join(vaultPath, subDir), 0o755))
+	defer os.RemoveAll(filepath.Join(vaultPath, subDir))
+
+	params1, _ := json.Marshal(map[string]any{"title": "Dup Note", "templateName": "", "directory": subDir})
 	_, err := handler.Handle(Fixture.TestContext, params1)
 	require.NoError(t, err)
 
-	path2 := filepath.Join(dir, "dup-note-moved.md")
-	params2, _ := json.Marshal(map[string]any{"title": "Dup Note", "path": path2})
+	subDir2 := "dup-dir-moved"
+	require.NoError(t, os.MkdirAll(filepath.Join(vaultPath, subDir2), 0o755))
+	defer os.RemoveAll(filepath.Join(vaultPath, subDir2))
+	params2, _ := json.Marshal(map[string]any{"title": "Dup Note", "templateName": "", "directory": subDir2})
 
 	// Act
 	_, err = handler.Handle(Fixture.TestContext, params2)
@@ -102,15 +115,15 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM notes WHERE slug = ?`, "dup-note").Scan(&count))
 	assert.Equal(t, 1, count)
 
+	expectedPath := filepath.Join(vaultPath, subDir2, "dup-note.md")
 	var path string
 	require.NoError(t, Fixture.DB.QueryRow(`SELECT path FROM notes WHERE slug = ?`, "dup-note").Scan(&path))
-	assert.Equal(t, path2, path)
+	assert.Equal(t, expectedPath, path)
 }
 
 func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	
 
 	// Act
 	_, err := handler.Handle(Fixture.TestContext, json.RawMessage(`{invalid json}`))
@@ -119,14 +132,14 @@ func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
 	assert.Error(t, err)
 }
 
-func TestCreateNoteHandler_NonExistentTemplatePath_ReturnsError(t *testing.T) {
+func TestCreateNoteHandler_NonExistentTemplateName_ReturnsError(t *testing.T) {
 	// Arrange
 	handler := handlers.NewCreateNoteHandler()
-	
+
 	params, _ := json.Marshal(map[string]any{
 		"title":        "Ghost Note",
-		"path":         filepath.Join(t.TempDir(), "ghost.md"),
-		"templatePath": "/non/existent/template.md",
+		"templateName": "non-existent-template",
+		"directory":    "",
 	})
 
 	// Act

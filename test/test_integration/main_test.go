@@ -5,11 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"os"
+	"path"
 	"path/filepath"
 	"testing"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 	_ "modernc.org/sqlite"
 )
 
@@ -17,6 +19,7 @@ type DBFixture struct {
 	DB          *sql.DB
 	DBPath      string
 	TestContext context.Context
+	VaultStore *store.VaultStore
 }
 
 func NewDBFixture() *DBFixture {
@@ -35,6 +38,7 @@ func NewDBFixture() *DBFixture {
 		DB:          dbContext.DB,
 		DBPath:      dbPath,
 		TestContext: context.Background(),
+		VaultStore: store.NewVaultStore(vaultPath, path.Join(vaultPath, "templates")),
 	}
 }
 

@@ -1,6 +1,8 @@
 package store
 
-import "os"
+import (
+	"os"
+)
 
 type FileStore struct {
 	staged    []stagedFile
@@ -28,7 +30,6 @@ func (fs *FileStore) Flush() error {
 		if fs.fileExists(file.path) {
 			continue
 		}
-
 		if err := os.WriteFile(file.path, file.data, 0o644); err != nil {
 			for _, path := range writtenPaths {
 				_ = os.Remove(path)
@@ -58,4 +59,3 @@ func (fs *FileStore) fileExists(path string) bool {
 	_, err := os.Stat(path)
 	return err == nil
 }
-
