@@ -7,7 +7,6 @@ import (
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
@@ -43,7 +42,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, slug+".md")
 
-	data, err := template.RenderTemplate(templatePath, cmd.Title, slug)
+	data, err := filehandling.RenderTemplate(templatePath, cmd.Title, slug)
 	if err != nil {
 		return nil, err
 	}
