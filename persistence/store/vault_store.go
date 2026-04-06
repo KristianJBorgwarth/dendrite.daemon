@@ -8,11 +8,11 @@ type VaultStore struct {
 
 var vaultStore *VaultStore
 
-func NewVaultStore(vaultPath string) *VaultStore {
+func NewVaultStore(vault, templateDir string) *VaultStore {
 	if vaultStore != nil {
 		return vaultStore
 	}
-	vaultStore = &VaultStore{}
+	vaultStore = &VaultStore{Config: persistenceconfig.NewVaultConfiguration(vault, templateDir)}
 	return vaultStore
 }
 
@@ -21,4 +21,8 @@ func GetVaultStore() *VaultStore {
 		panic("VaultStore not initialized. Call NewVaultStore first.")
 	}
 	return vaultStore
+}
+
+func (vs *VaultStore) SetConfig(config persistenceconfig.VaultConfiguration) {
+	vs.Config = &config
 }

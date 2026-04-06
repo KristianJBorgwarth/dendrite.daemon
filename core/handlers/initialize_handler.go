@@ -5,15 +5,12 @@ import (
 	"encoding/json"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
 type initializeCommand struct {
 	VaultPath         string `json:"vaultPath"`
 	TemplateDirectory string `json:"templateDirectory"`
-	ScratchDirectory  string `json:"scratchDirectory"`
-	ScratchTemplate   string `json:"scratchTemplate"`
-	DailyDirectory    string `json:"dailyDirectory"`
-	DailyTemplate     string `json:"dailyTemplate"`
 }
 
 type InitializeHandler struct{}
@@ -29,9 +26,9 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
+	store := store.NewVaultStore(cmd.VaultPath, cmd.TemplateDirectory)
 
-
-	err := persistence.InitializeDBContext(cmd.VaultPath)
+	err := persistence.InitializeDBContext(store.Config.VaultPath())
 	if err != nil {
 		return nil, err
 	}
