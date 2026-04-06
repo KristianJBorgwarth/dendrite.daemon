@@ -9,12 +9,13 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
 type createNoteCommand struct {
 	Title        string `json:"title"`
-	TemplatePath string `json:"templatePath"`
-	Path         string `json:"path"`
+	TemplateName string `json:"templateName"`
+	Directory    string `json:"directory"`
 }
 
 type CreateNoteHandler struct {
@@ -34,7 +35,9 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	slug := frontmatter.Slugify(cmd.Title)
 
-	data, err := template.RenderTemplate(cmd.TemplatePath, cmd.Title, slug)
+	templatePath := store.GetVaultStore().GetTemplatePath(cmd.TemplateName)
+
+	data, err := template.RenderTemplate(templatePath, cmd.Title, slug)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +82,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	tagModels = append(tagModels, dbTags...)
 
-	note := models.CreateNote(cmd.Path, cmd.Title, slug)
+	note := models.CreateNote(cmd.Directory, cmd.Title, slug)
 
 	if err = noteRepo.Upsert(ctx, note); err != nil {
 		return nil, err
@@ -89,11 +92,11 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	h.uow.FileStore.Stage(cmd.Path, data)
+	h.uow.FileStore.Stage(cmd.Directory, data)
 
 	if err = h.uow.Commit(); err != nil {
 		return nil, err
 	}
 
-	return cmd.Path, nil
+	return cmd.Directory, nil
 }
