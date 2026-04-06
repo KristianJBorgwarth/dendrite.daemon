@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"path/filepath"
 
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/frontmatter"
+	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/template"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
@@ -34,7 +34,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	slug := frontmatter.Slugify(cmd.Title)
+	slug := filehandling.Slugify(cmd.Title)
 
 	var templatePath string
 	if cmd.TemplateName != "" {
@@ -48,7 +48,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	tags, err := frontmatter.ParseTags(data)
+	tags, err := filehandling.ParseTags(data)
 	if err != nil {
 		return nil, err
 	}
