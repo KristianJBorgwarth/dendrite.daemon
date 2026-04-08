@@ -21,7 +21,7 @@ func NewNoteRepository(tx *sql.Tx) NoteRepository {
 
 func (r *noteRepository) Upsert(ctx context.Context, note *models.Note) error {
 	query := `
-	INSERT INTO notes (id, title, path, slug, created_at, updated_at)
+	INSERT INTO note (id, title, path, slug, created_at, updated_at)
 	VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
 	ON CONFLICT (slug) DO UPDATE
 	SET title = EXCLUDED.title,
