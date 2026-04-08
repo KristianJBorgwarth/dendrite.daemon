@@ -41,7 +41,11 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
 
-	note := noteRepo.GetBySlug(ctx, file.Slug())
+	
+	note, err := noteRepo.GetBySlug(ctx, file.Slug)
+	if err != nil {
+		return nil, err
+	}
 
 
 
