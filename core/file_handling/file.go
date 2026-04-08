@@ -5,17 +5,21 @@ import (
 	"os"
 )
 
-type File struct{
-	Title string
-	Slug string
+type File struct {
+	Title       string
+	Slug        string
 	FrontMatter FrontMatter
-	Links []string
-	Content[] string
+	Content     []string
+}
+
+type Link struct {
+	FromNoteID string
+
+
 }
 
 func ReadFile(path string) (*File, error) {
 	content, err := os.ReadFile(path)
-
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +37,10 @@ func ReadFile(path string) (*File, error) {
 	}
 
 	return &File{
-		Title: fm.Title,
-		Slug: Slugify(fm.Title),
+		Title:       fm.Title,
+		Slug:        Slugify(fm.Title),
 		FrontMatter: *fm,
-		Links: links,
+		Links:       links,
 	}, nil
 }
 
