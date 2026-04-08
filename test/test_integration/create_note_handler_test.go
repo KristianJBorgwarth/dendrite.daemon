@@ -31,7 +31,7 @@ func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T
 	assert.Equal(t, notePath, result)
 
 	var count int
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM notes WHERE slug = ?`, "my-note").Scan(&count))
+	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "my-note").Scan(&count))
 	assert.Equal(t, 1, count)
 
 	_, statErr := os.Stat(notePath)
@@ -68,10 +68,10 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 	assert.Equal(t, notePath, result)
 
 	var noteCount int
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM notes WHERE slug = ?`, "templated-note").Scan(&noteCount))
+	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "templated-note").Scan(&noteCount))
 	assert.Equal(t, 1, noteCount)
 
-	rows, err := Fixture.DB.Query(`SELECT name FROM tags WHERE name IN ('go', 'testing')`)
+	rows, err := Fixture.DB.Query(`SELECT name FROM tag WHERE name IN ('go', 'testing')`)
 	require.NoError(t, err)
 	defer rows.Close()
 
@@ -112,12 +112,12 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 	require.NoError(t, err)
 
 	var count int
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM notes WHERE slug = ?`, "dup-note").Scan(&count))
+	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "dup-note").Scan(&count))
 	assert.Equal(t, 1, count)
 
 	expectedPath := filepath.Join(vaultPath, subDir2, "dup-note.md")
 	var path string
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT path FROM notes WHERE slug = ?`, "dup-note").Scan(&path))
+	require.NoError(t, Fixture.DB.QueryRow(`SELECT path FROM note WHERE slug = ?`, "dup-note").Scan(&path))
 	assert.Equal(t, expectedPath, path)
 }
 
