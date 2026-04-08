@@ -1,16 +1,42 @@
 package models
 
+import "github.com/google/uuid"
+
 type Link struct {
+	id         string
 	fromNoteID string
-	toNoteID   string
+	targetSlug string
 	raw        string
+	display    string
+	line       int
+	col        int
 }
 
-func NewLink(fromNoteID, toNoteID, raw string) *Link {
+func NewLink(id, fromNoteID, targetSlug, raw, display string, line, col int) *Link {
 	return &Link{
+		id:         id,
 		fromNoteID: fromNoteID,
-		toNoteID:   toNoteID,
+		targetSlug: targetSlug,
 		raw:        raw,
+		display:    display,
+		line:       line,
+		col:        col,
+	}
+}
+
+func CreateLink(fromNoteID, targetSlug, raw, display string, line, col int) *Link {
+	id, err := uuid.NewV7()
+	if err != nil {
+		panic(err)
+	}
+	return &Link{
+		id:         id.String(),
+		fromNoteID: fromNoteID,
+		targetSlug: targetSlug,
+		raw:        raw,
+		display:    display,
+		line:       line,
+		col:        col,
 	}
 }
 
@@ -18,8 +44,8 @@ func (l *Link) FromNoteID() string {
 	return l.fromNoteID
 }
 
-func (l *Link) ToNoteID() string {
-	return l.toNoteID
+func (l *Link) TargetSlug() string {
+	return l.targetSlug
 }
 
 func (l *Link) Raw() string {
