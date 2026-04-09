@@ -8,7 +8,7 @@ import (
 )
 
 type NoteRepository interface {
-	Upsert(ctx context.Context, note *models.Note) error
+	Insert(ctx context.Context, note *models.Note) error
 }
 
 type noteRepository struct {
@@ -19,7 +19,7 @@ func NewNoteRepository(tx *sql.Tx) NoteRepository {
 	return &noteRepository{Transaction: tx}
 }
 
-func (r *noteRepository) Upsert(ctx context.Context, note *models.Note) error {
+func (r *noteRepository) Insert(ctx context.Context, note *models.Note) error {
 	query := `
 	INSERT INTO note (id, title, path, slug, created_at, updated_at)
 	VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))

@@ -9,8 +9,8 @@ import (
 )
 
 type ITagRepository interface {
-	Upsert(ctx context.Context, tags []*models.Tag) error
-	UpsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
+	Insert(ctx context.Context, tags []*models.Tag) error
+	InsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
 	GetByNames(ctx context.Context, names []string) ([]*models.Tag, error)
 }
 
@@ -22,7 +22,7 @@ func NewTagRepository(tx *sql.Tx) ITagRepository {
 	return &tagRepository{Transaction: tx}
 }
 
-func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
+func (r *tagRepository) Insert(ctx context.Context, tags []*models.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -41,7 +41,7 @@ func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
 	return err
 }
 
-func (r *tagRepository) UpsertNoteTags(ctx context.Context ,noteID string, tagIDs []string) error {
+func (r *tagRepository) InsertNoteTags(ctx context.Context ,noteID string, tagIDs []string) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}

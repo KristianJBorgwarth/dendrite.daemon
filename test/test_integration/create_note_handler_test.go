@@ -6,14 +6,14 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/note"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
 func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T) {
 	// Arrange
-	handler := handlers.NewCreateNoteHandler()
+	handler := note.NewCreateNoteHandler()
 
 	vaultPath := Fixture.VaultStore.Config.VaultPath()
 	notePath := filepath.Join(vaultPath, "my-note.md")
@@ -40,7 +40,7 @@ func TestCreateNoteHandler_NoTemplate_CreatesNoteFileAndReturnsPath(t *testing.T
 
 func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t *testing.T) {
 	// Arrange
-	handler := handlers.NewCreateNoteHandler()
+	handler := note.NewCreateNoteHandler()
 
 	vaultPath := Fixture.VaultStore.Config.VaultPath()
 	templateDir := Fixture.VaultStore.Config.TemplateDirectory()
@@ -89,7 +89,7 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 
 func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 	// Arrange
-	handler := handlers.NewCreateNoteHandler()
+	handler := note.NewCreateNoteHandler()
 
 	vaultPath := Fixture.VaultStore.Config.VaultPath()
 	subDir := "dup-dir"
@@ -123,7 +123,7 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 
 func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
 	// Arrange
-	handler := handlers.NewCreateNoteHandler()
+	handler := note.NewCreateNoteHandler()
 
 	// Act
 	_, err := handler.Handle(Fixture.TestContext, json.RawMessage(`{invalid json}`))
@@ -134,7 +134,7 @@ func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {
 
 func TestCreateNoteHandler_NonExistentTemplateName_ReturnsError(t *testing.T) {
 	// Arrange
-	handler := handlers.NewCreateNoteHandler()
+	handler := note.NewCreateNoteHandler()
 
 	params, _ := json.Marshal(map[string]any{
 		"title":        "Ghost Note",
