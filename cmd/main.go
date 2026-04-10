@@ -16,8 +16,9 @@ func main() {
 	logging.Init()
 	server := server.NewServer()
 
-	server.RegisterHandler("initialize", vault.NewInitializeHandler())
-	server.RegisterHandler("create_note", note.NewCreateNoteHandler())
+	server.RegisterHandler("vault/init", vault.NewInitializeHandler())
+	server.RegisterHandler("note/create", note.NewCreateNoteHandler())
+	server.RegisterHandler("note/save", note.NewSaveNoteHandler())
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler())
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {

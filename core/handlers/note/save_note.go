@@ -38,7 +38,6 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	}
 
 	defer h.uow.Rollback()
-	tagRepo := repositories.NewTagRepository(tx)
 	noteRepo := repositories.NewNoteRepository(tx)
 
 	
@@ -46,6 +45,8 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	if err != nil {
 		return nil, err
 	}
+
+	println("Saving note:", note.Title(), "at path:", note.Path())
 
 
 

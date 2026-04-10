@@ -9,6 +9,7 @@ import (
 
 type NoteRepository interface {
 	Insert(ctx context.Context, note *models.Note) error
+	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
 }
 
 type noteRepository struct {
