@@ -5,11 +5,12 @@ import (
 	"encoding/json"
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
 type saveNoteCommand struct {
-	Path      string   `json:"path"`
+	Path string `json:"path"`
 }
 
 type SaveNoteHandler struct {
@@ -40,7 +41,6 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	defer h.uow.Rollback()
 	noteRepo := repositories.NewNoteRepository(tx)
 
-	
 	note, err := noteRepo.GetBySlug(ctx, file.Slug)
 	if err != nil {
 		return nil, err
@@ -48,7 +48,13 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 
 	println("Saving note:", note.Title(), "at path:", note.Path())
 
-
-
 	return nil, nil
+}
+
+func (h *SaveNoteHandler) mapToLinkModel(noteID string, extracted *[]filehandling.ExtractedLink) *[]models.Link {
+	var links []models.Link
+	for _, link := range *extracted {
+		links = append(links, *models.CreateLink(noteID, link.TargetSlug, link.Raw, link.Display, link.Line, link.Col))
+	}
+	return &links
 }
