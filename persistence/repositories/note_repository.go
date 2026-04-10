@@ -30,3 +30,16 @@ func (r *noteRepository) Insert(ctx context.Context, note *models.Note) error {
 	_, err := r.Transaction.ExecContext(ctx, query, note.ID(), note.Title(), note.Path(), note.Slug())
 	return err
 }
+
+func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.Note, error) {
+	query := `SELECT id, title, path, slug, created_at, updated_at FROM notes WHERE slug = ?`
+	row := r.Transaction.QueryRowContext(ctx, query, slug)
+
+	var id, title, path, createdAt, updatedAt string
+	err := row.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return models.NewNote(id, path, title, slug, createdAt, updatedAt), nil
+}
