@@ -9,8 +9,8 @@ import (
 )
 
 type ITagRepository interface {
-	Upsert(ctx context.Context, tags []*models.Tag) error
-	UpsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
+	Insert(ctx context.Context, tags []*models.Tag) error
+	InsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
 	GetByNames(ctx context.Context, names []string) ([]*models.Tag, error)
 }
 
@@ -22,7 +22,7 @@ func NewTagRepository(tx *sql.Tx) ITagRepository {
 	return &tagRepository{Transaction: tx}
 }
 
-func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
+func (r *tagRepository) Insert(ctx context.Context, tags []*models.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -35,13 +35,13 @@ func (r *tagRepository) Upsert(ctx context.Context, tags []*models.Tag) error {
 		args = append(args, tag.ID(), tag.Name())
 	}
 
-	query := "INSERT OR IGNORE INTO tags(id, name) VALUES " + strings.Join(placeholders, ",")
+	query := "INSERT OR IGNORE INTO tag(id, name) VALUES " + strings.Join(placeholders, ",")
 
 	_, err := r.Transaction.ExecContext(ctx, query, args...)
 	return err
 }
 
-func (r *tagRepository) UpsertNoteTags(ctx context.Context ,noteID string, tagIDs []string) error {
+func (r *tagRepository) InsertNoteTags(ctx context.Context ,noteID string, tagIDs []string) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}
@@ -54,7 +54,7 @@ func (r *tagRepository) UpsertNoteTags(ctx context.Context ,noteID string, tagID
 		args = append(args, noteID, tagID)
 	}
 
-	query := "INSERT OR IGNORE INTO note_tags(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
+	query := "INSERT OR IGNORE INTO note_tag(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
 
 	_, err := r.Transaction.ExecContext(ctx, query, args...)
 	if err != nil {
@@ -77,7 +77,7 @@ func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*mode
 		args = append(args, name)
 	}
 
-	query := "SELECT id, name FROM tags WHERE name IN (" + strings.Join(placeholders, ",") + ")"
+	query := "SELECT id, name FROM tag WHERE name IN (" + strings.Join(placeholders, ",") + ")"
 
 	rows, err := r.Transaction.QueryContext(ctx, query, args...)
 	if err != nil {
