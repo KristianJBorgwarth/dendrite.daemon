@@ -3,45 +3,33 @@ package completion
 import (
 	"context"
 	"encoding/json"
-
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
-	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
+	"log/slog"
 )
 
 type completeLinkCommand struct {
-	LinkQuery string `json:"linkQuery"`
+	Query string `json:"query"`
 }
 
-type CompleteLinkHandler struct{
-	uow *repositories.UnitOfWork
+type completionItem struct {
+	Slug string `json:"slug"`
 }
+
+type CompleteLinkHandler struct{}
 
 func NewCompleteLinkHandler() *CompleteLinkHandler {
-	return &CompleteLinkHandler{repositories.NewUnitOfWork()}
+	return &CompleteLinkHandler{}
 }
 
 func (h *CompleteLinkHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
 	var cmd completeLinkCommand
-
 	if err := json.Unmarshal(raw, &cmd); err != nil {
 		return nil, err
 	}
+	slog.Debug("handling complete link command", "query", cmd.Query)
 
-	tx, err := h.uow.Begin()
-	if err != nil {
-		return nil, err
-	}
-
-	defer h.uow.Rollback()
-	linkRepo := repositories.NewLinkRepository(tx)
-
-	links, err := linkRepo.Search(ctx, cmd.LinkQuery)
-	if err != nil {
-		return nil, err
-	}
-
-	slugs := utils.Select(links, func(l *models.Link) string {return l.TargetSlug()});
-
-	return slugs, nil
+	return []completionItem{
+		{Slug: "standard-streams"},
+		{Slug: "unit-of-work"},
+		{Slug: "treesitter-basics"},
+	}, nil
 }
