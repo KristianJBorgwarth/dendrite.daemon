@@ -16,9 +16,8 @@ func NewUnitOfWork() *UnitOfWork {
 	return &UnitOfWork{FileStore: store.NewFileStore()}
 }
 
-func (u *UnitOfWork) Begin() (tx *sql.Tx, err error) {
-	dbContext := persistence.GetDBContext()
-	tx, err = dbContext.DB.Begin() 
+func (u *UnitOfWork) Begin() (persistence.IDbContext, error) {
+	tx, err := persistence.GetDBContext().DB.Begin()
 	if err != nil {
 		return nil, err
 	}

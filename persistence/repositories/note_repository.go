@@ -2,9 +2,9 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
 type NoteRepository interface {
@@ -13,11 +13,11 @@ type NoteRepository interface {
 }
 
 type noteRepository struct {
-	Transaction *sql.Tx
+	dbContext persistence.IDbContext
 }
 
-func NewNoteRepository(tx *sql.Tx) NoteRepository {
-	return &noteRepository{Transaction: tx}
+func NewNoteRepository(ctx persistence.IDbContext) NoteRepository {
+	return &noteRepository{dbContext: ctx}
 }
 
 func (r *noteRepository) Insert(ctx context.Context, note *models.Note) error {
@@ -28,13 +28,13 @@ func (r *noteRepository) Insert(ctx context.Context, note *models.Note) error {
 	SET title = EXCLUDED.title,
 	    path = EXCLUDED.path;
 	`
-	_, err := r.Transaction.ExecContext(ctx, query, note.ID(), note.Title(), note.Path(), note.Slug())
+	_, err := r.dbContext.ExecContext(ctx, query, note.ID(), note.Title(), note.Path(), note.Slug())
 	return err
 }
 
 func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.Note, error) {
 	query := `SELECT id, title, path, slug, created_at, updated_at FROM notes WHERE slug = ?`
-	row := r.Transaction.QueryRowContext(ctx, query, slug)
+	row := r.dbContext.QueryRowContext(ctx, query, slug)
 
 	var id, title, path, createdAt, updatedAt string
 	err := row.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt)

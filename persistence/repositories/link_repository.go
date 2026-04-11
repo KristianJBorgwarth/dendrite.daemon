@@ -2,9 +2,9 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
 type ILinkRepository interface {
@@ -14,15 +14,15 @@ type ILinkRepository interface {
 }
 
 type linkRepository struct {
-	Transaction *sql.Tx
+	dbContext persistence.IDbContext
 }
 
-func NewLinkRepository(tx *sql.Tx) ILinkRepository {
-	return &linkRepository{Transaction: tx}
+func NewLinkRepository(ctx persistence.IDbContext) ILinkRepository {
+	return &linkRepository{dbContext: ctx}
 }
 
 func (r *linkRepository) GetByNoteID(ctx context.Context, fromNoteID string) ([]*models.Link, error) {
-	rows, err := r.Transaction.QueryContext(ctx, "SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE from_note_id = ?", fromNoteID)
+	rows, err := r.dbContext.QueryContext(ctx, "SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE from_note_id = ?", fromNoteID)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func (r *linkRepository) GetByNoteID(ctx context.Context, fromNoteID string) ([]
 }
 
 func (r *linkRepository) GetBySlug(ctx context.Context, targetSlug string) ([]*models.Link, error) {
-	rows, err := r.Transaction.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE target_slug = ?`, targetSlug)
+	rows, err := r.dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE target_slug = ?`, targetSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -62,7 +62,7 @@ func (r *linkRepository) GetBySlug(ctx context.Context, targetSlug string) ([]*m
 }
 
 func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Link, error) {
-	rows, err := r.Transaction.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE raw LIKE ?`, "%"+query+"%")
+	rows, err := r.dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE raw LIKE ?`, "%"+query+"%")
 	if err != nil {
 		return nil, err
 	}
