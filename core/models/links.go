@@ -40,6 +40,10 @@ func CreateLink(fromNoteID, targetSlug, raw, display string, line, col int) *Lin
 	}
 }
 
+func (l *Link) ID() string {
+	return l.id
+}
+
 func (l *Link) FromNoteID() string {
 	return l.fromNoteID
 }
@@ -50,4 +54,16 @@ func (l *Link) TargetSlug() string {
 
 func (l *Link) Raw() string {
 	return l.raw
+}
+
+func (l *Link) Display() string {
+	return l.display
+}
+
+func (l *Link) Line() int {
+	return l.line
+}
+
+func (l *Link) Col() int {
+	return l.col
 }

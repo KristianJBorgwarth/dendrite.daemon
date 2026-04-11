@@ -12,7 +12,7 @@ type ITagRepository interface {
 	Insert(ctx context.Context, tags []*models.Tag) error
 	InsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
 	GetByNames(ctx context.Context, names []string) ([]*models.Tag, error)
-	Delete(ctx context.Context, noteID string) error
+	DeleteNoteTags(ctx context.Context, noteID string) error
 }
 
 type tagRepository struct {
@@ -99,8 +99,8 @@ func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*mode
 	return tags, nil
 }
 
-func (r *tagRepository) Delete(ctx context.Context, noteID string) error {
+func (r *tagRepository) DeleteNoteTags(ctx context.Context, noteID string) error {
 	query := "DELETE FROM note_tag WHERE note_id = ?"
-	_, err := r.Transaction.ExecContext(ctx, query, noteID)
+	_, err := r.dbContext.ExecContext(ctx, query, noteID)
 	return err
 }

@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"strings"
 	"context"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
@@ -8,6 +9,7 @@ import (
 )
 
 type ILinkRepository interface {
+	Insert(ctx context.Context, links []*models.Link) error
 	GetByNoteID(ctx context.Context, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, targetSlug string) ([]*models.Link, error)
 	Search(ctx context.Context, query string) ([]*models.Link, error)
@@ -22,8 +24,27 @@ func NewLinkRepository(ctx persistence.IDbContext) ILinkRepository {
 	return &linkRepository{dbContext: ctx}
 }
 
+func (r *linkRepository) Insert(ctx context.Context, links []*models.Link) error {
+	if len(links) == 0 {
+		return nil
+	}
+
+	placeholders := make([]string, 0, len(links))
+	args := make([]any, 0, len(links))
+
+	for _, link := range links {
+		placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?)")
+		args = append(args, link.ID(), link.FromNoteID(), link.TargetSlug(), link.Raw(), link.Display(), link.Line(), link.Col())
+	}
+
+	query := "INSERT OR IGNORE INTO link(id, from_note_id, target_slug, raw, display, line, col) VALUES " + strings.Join(placeholders, ",") 
+
+	_, err := r.dbContext.ExecContext(ctx, query, args...)
+	return err
+}
+
 func (r *linkRepository) GetByNoteID(ctx context.Context, fromNoteID string) ([]*models.Link, error) {
-	rows, err := r.dbContext.QueryContext(ctx, "SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE from_note_id = ?", fromNoteID)
+	rows, err := r.dbContext.QueryContext(ctx, "SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE from_note_id = ?", fromNoteID)
 	if err != nil {
 		return nil, err
 	}
@@ -43,7 +64,7 @@ func (r *linkRepository) GetByNoteID(ctx context.Context, fromNoteID string) ([]
 }
 
 func (r *linkRepository) GetBySlug(ctx context.Context, targetSlug string) ([]*models.Link, error) {
-	rows, err := r.dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE target_slug = ?`, targetSlug)
+	rows, err := r.dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE target_slug = ?`, targetSlug)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +84,7 @@ func (r *linkRepository) GetBySlug(ctx context.Context, targetSlug string) ([]*m
 }
 
 func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Link, error) {
-	rows, err := r.dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM links WHERE raw LIKE ?`, "%"+query+"%")
+	rows, err := r.dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE raw LIKE ?`, "%"+query+"%")
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +104,6 @@ func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Li
 }
 
 func (r *linkRepository) Delete(ctx context.Context, fromNoteID string) error {
-	_, err := r.Transaction.ExecContext(ctx, "DELETE FROM links WHERE from_note_id = ?", fromNoteID)
+	_, err := r.dbContext.ExecContext(ctx, "DELETE FROM link WHERE from_note_id = ?", fromNoteID)
 	return err
 }
