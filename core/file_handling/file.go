@@ -9,11 +9,12 @@ import (
 )
 
 type File struct {
+	Path				string
 	Title       string
 	Slug        string
 	FrontMatter FrontMatter
 	Content     []string
-	Links       []ExtractedLink
+	ExtractedLinks       []*ExtractedLink
 }
 
 type ExtractedLink struct {
@@ -38,18 +39,19 @@ func ReadFile(path string) (*File, error) {
 	}
 
 	return &File{
+		Path:        path,
 		Title:       fm.Title,
 		Slug:        strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)),
 		FrontMatter: *fm,
 		Content:     strings.Split(string(body), "\n"),
-		Links:       ExtractLinks(body),
+		ExtractedLinks:       ExtractLinks(body),
 	}, nil
 }
 
 var linkRegex = regexp.MustCompile(`\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`)
 
-func ExtractLinks(body []byte) []ExtractedLink {
-	var links []ExtractedLink
+func ExtractLinks(body []byte) []*ExtractedLink {
+	var links []*ExtractedLink
 
 	lineStart := 0
 	lineNum := 1
@@ -65,7 +67,7 @@ func ExtractLinks(body []byte) []ExtractedLink {
 				if m[4] != -1 {
 					display = string(line[m[4]:m[5]])
 				}
-				links = append(links, ExtractedLink{
+				links = append(links, &ExtractedLink{
 					TargetSlug: slug,
 					Raw:        raw,
 					Display:    display,

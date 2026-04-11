@@ -2,6 +2,8 @@ package repositories
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
@@ -33,12 +35,15 @@ func (r *noteRepository) Insert(ctx context.Context, note *models.Note) error {
 }
 
 func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.Note, error) {
-	query := `SELECT id, title, path, slug, created_at, updated_at FROM notes WHERE slug = ?`
+	query := `SELECT id, title, path, slug, created_at, updated_at FROM note WHERE slug = ?`
 	row := r.dbContext.QueryRowContext(ctx, query, slug)
 
 	var id, title, path, createdAt, updatedAt string
 	err := row.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt)
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil 
+		}
 		return nil, err
 	}
 
