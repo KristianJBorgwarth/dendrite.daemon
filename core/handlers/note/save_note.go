@@ -46,9 +46,17 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 		return nil, err
 	}
 
-	println("Saving note:", note.Title(), "at path:", note.Path())
+	newLinks := h.mapToLinkModel(note.ID(), file.Links)
 
-	return nil, nil
+	if note == nil {
+		err := h.handleNewNote(ctx, note, file)
+		if err != nil {
+			return nil, err
+		}
+		return nil, nil
+	} else {
+		return nil, nil
+	}
 }
 
 func (h *SaveNoteHandler) mapToLinkModel(noteID string, extracted *[]filehandling.ExtractedLink) *[]models.Link {
@@ -57,4 +65,8 @@ func (h *SaveNoteHandler) mapToLinkModel(noteID string, extracted *[]filehandlin
 		links = append(links, *models.CreateLink(noteID, link.TargetSlug, link.Raw, link.Display, link.Line, link.Col))
 	}
 	return &links
+}
+
+func (h *SaveNoteHandler) handleNewNote(ctx context.Context, note *models.Note, file *filehandling.File) error {
+	panic("not implemented")
 }

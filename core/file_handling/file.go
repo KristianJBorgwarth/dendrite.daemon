@@ -13,7 +13,7 @@ type File struct {
 	Slug        string
 	FrontMatter FrontMatter
 	Content     []string
-	Links       []ExtractedLink
+	Links       *[]ExtractedLink
 }
 
 type ExtractedLink struct {
@@ -48,7 +48,7 @@ func ReadFile(path string) (*File, error) {
 
 var linkRegex = regexp.MustCompile(`\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`)
 
-func ExtractLinks(body []byte) []ExtractedLink {
+func ExtractLinks(body []byte) *[]ExtractedLink {
 	var links []ExtractedLink
 
 	lineStart := 0
@@ -78,5 +78,5 @@ func ExtractLinks(body []byte) []ExtractedLink {
 		}
 	}
 
-	return links
+	return &links
 }

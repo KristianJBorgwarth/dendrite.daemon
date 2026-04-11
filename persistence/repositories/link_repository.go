@@ -11,6 +11,7 @@ type ILinkRepository interface {
 	GetByNoteID(ctx context.Context, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, targetSlug string) ([]*models.Link, error)
 	Search(ctx context.Context, query string) ([]*models.Link, error)
+	Delete(ctx context.Context, fromNoteID string) error
 }
 
 type linkRepository struct {
@@ -79,4 +80,9 @@ func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Li
 	}
 
 	return links, nil
+}
+
+func (r *linkRepository) Delete(ctx context.Context, fromNoteID string) error {
+	_, err := r.Transaction.ExecContext(ctx, "DELETE FROM links WHERE from_note_id = ?", fromNoteID)
+	return err
 }
