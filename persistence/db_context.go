@@ -4,11 +4,11 @@ import (
 	"database/sql"
 )
 
-type DBContext struct {
+type Database struct {
 	DB *sql.DB
 }
 
-var dbContext *DBContext
+var dbContext *Database
 
 
 func InitializeDBContext(vaultPath string) (error) {
@@ -17,11 +17,11 @@ func InitializeDBContext(vaultPath string) (error) {
 		return err
 	}
 
-	dbContext = &DBContext{DB: db}
+	dbContext = &Database{DB: db}
 	return nil
 }
 
-func GetDBContext() (*DBContext) {
+func GetDBContext() (*Database) {
 	if dbContext == nil {
 		panic("DBContext is not initialized. Call InitializeDbContext first.")
 	}

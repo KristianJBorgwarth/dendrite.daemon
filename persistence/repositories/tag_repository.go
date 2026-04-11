@@ -2,10 +2,10 @@ package repositories
 
 import (
 	"context"
-	"database/sql"
 	"strings"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
 type ITagRepository interface {
@@ -16,11 +16,11 @@ type ITagRepository interface {
 }
 
 type tagRepository struct {
-	Transaction *sql.Tx
+	dbContext persistence.IDbContext
 }
 
-func NewTagRepository(tx *sql.Tx) ITagRepository {
-	return &tagRepository{Transaction: tx}
+func NewTagRepository(ctx persistence.IDbContext) ITagRepository {
+	return &tagRepository{dbContext: ctx}
 }
 
 func (r *tagRepository) Insert(ctx context.Context, tags []*models.Tag) error {
@@ -38,7 +38,7 @@ func (r *tagRepository) Insert(ctx context.Context, tags []*models.Tag) error {
 
 	query := "INSERT OR IGNORE INTO tag(id, name) VALUES " + strings.Join(placeholders, ",")
 
-	_, err := r.Transaction.ExecContext(ctx, query, args...)
+	_, err := r.dbContext.ExecContext(ctx, query, args...)
 	return err
 }
 
@@ -57,7 +57,7 @@ func (r *tagRepository) InsertNoteTags(ctx context.Context ,noteID string, tagID
 
 	query := "INSERT OR IGNORE INTO note_tag(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
 
-	_, err := r.Transaction.ExecContext(ctx, query, args...)
+	_, err := r.dbContext.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -80,7 +80,7 @@ func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*mode
 
 	query := "SELECT id, name FROM tag WHERE name IN (" + strings.Join(placeholders, ",") + ")"
 
-	rows, err := r.Transaction.QueryContext(ctx, query, args...)
+	rows, err := r.dbContext.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}

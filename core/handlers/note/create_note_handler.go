@@ -40,15 +40,15 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, template.Slug+".md")
 
-	tx, err := h.uow.Begin()
+	dbCtx, err := h.uow.Begin()
 	if err != nil {
 		return nil, err
 	}
 
 	defer h.uow.Rollback()
 
-	tagRepo := repositories.NewTagRepository(tx)
-	noteRepo := repositories.NewNoteRepository(tx)
+	tagRepo := repositories.NewTagRepository(dbCtx)
+	noteRepo := repositories.NewNoteRepository(dbCtx)
 
 	dbTags, err := tagRepo.GetByNames(ctx, template.FrontMatter.Tags)
 	if err != nil {
