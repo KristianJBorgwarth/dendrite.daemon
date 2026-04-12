@@ -7,6 +7,7 @@ import (
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -15,11 +16,19 @@ type saveNoteCommand struct {
 }
 
 type SaveNoteHandler struct {
-	uow *repositories.UnitOfWork
+	uow      *repositories.UnitOfWork
+	linkRepo repositories.ILinkRepository
+	tagRepo  repositories.ITagRepository
+	noteRepo repositories.NoteRepository
 }
 
-func NewSaveNoteHandler() *SaveNoteHandler {
-	return &SaveNoteHandler{repositories.NewUnitOfWork()}
+func NewSaveNoteHandler(
+	uow *repositories.UnitOfWork,
+	linkRepo repositories.ILinkRepository,
+	tagRepo repositories.ITagRepository,
+	noteRepo repositories.NoteRepository,
+) *SaveNoteHandler {
+	return &SaveNoteHandler{uow, linkRepo, tagRepo, noteRepo}
 }
 
 func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -42,22 +51,19 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	}
 
 	defer h.uow.Rollback()
-	noteRepo := repositories.NewNoteRepository(tx)
-	linkRepo := repositories.NewLinkRepository(tx)
-	tagRepo := repositories.NewTagRepository(tx)
 
-	note, err := noteRepo.GetBySlug(ctx, file.Slug)
+	note, err := h.noteRepo.GetBySlug(ctx, tx, file.Slug)
 	if err != nil {
 		slog.Debug("Failed to get note by slug", "slug", file.Slug, "error", err)
 		return nil, err
 	}
 
 	if note == nil {
-		if err := h.handleNewNote(ctx, noteRepo, linkRepo, tagRepo, file); err != nil {
+		if err := h.handleNewNote(ctx, tx, file); err != nil {
 			return nil, err
 		}
 	} else {
-		if err := h.handleExistingNote(ctx, linkRepo, tagRepo, note, file); err != nil {
+		if err := h.handleExistingNote(ctx, tx, note, file); err != nil {
 			return nil, err
 		}
 	}
@@ -70,27 +76,25 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 
 func (h *SaveNoteHandler) handleNewNote(
 	ctx context.Context,
-	noteRepo repositories.NoteRepository,
-	linkRepo repositories.ILinkRepository,
-	tagRepo repositories.ITagRepository,
+	dbCtx persistence.IDbContext,
 	file *filehandling.File,
 ) error {
 	note := models.CreateNote(file.Path, file.Title, file.Slug)
 	slog.Debug("EXTRACTED FILE", "path", file.Path, "title", file.Title, "slug", file.Slug, "links", file.ExtractedLinks, "tags", file.FrontMatter.Tags)
 
-	if err := noteRepo.Insert(ctx, note); err != nil {
+	if err := h.noteRepo.Insert(ctx, dbCtx, note); err != nil {
 		slog.Debug("Failed to insert new note", "noteID", note.ID(), "error", err)
 		return err
 	}
 
 	links := models.MapToLinkModel(note.ID(), file.ExtractedLinks)
 
-	if err := linkRepo.Insert(ctx, links); err != nil {
+	if err := h.linkRepo.Insert(ctx, dbCtx, links); err != nil {
 		slog.Debug("Failed to insert links for new note", "noteID", note.ID(), "error", err)
 		return err
 	}
 
-	if err := tagRepo.InsertNoteTags(ctx, note.ID(), file.FrontMatter.Tags); err != nil {
+	if err := h.tagRepo.InsertNoteTags(ctx, dbCtx, note.ID(), file.FrontMatter.Tags); err != nil {
 		slog.Debug("Failed to insert tags for new note", "noteID", note.ID(), "error", err)
 		return err
 	}
@@ -98,13 +102,13 @@ func (h *SaveNoteHandler) handleNewNote(
 	return nil
 }
 
-func (h *SaveNoteHandler) handleExistingNote(ctx context.Context,
-	linkRepo repositories.ILinkRepository,
-	tagRepo repositories.ITagRepository,
+func (h *SaveNoteHandler) handleExistingNote(
+	ctx context.Context,
+	dbCtx persistence.IDbContext,
 	note *models.Note,
 	file *filehandling.File,
 ) error {
-	err := h.deleteExistingNoteRelations(ctx, linkRepo, tagRepo, note.ID())
+	err := h.deleteExistingNoteRelations(ctx, dbCtx, note.ID())
 	if err != nil {
 		slog.Debug("Failed to delete existing note relations", "noteID", note.ID(), "error", err)
 		return err
@@ -112,12 +116,12 @@ func (h *SaveNoteHandler) handleExistingNote(ctx context.Context,
 
 	links := models.MapToLinkModel(note.ID(), file.ExtractedLinks)
 
-	if err = linkRepo.Insert(ctx, links); err != nil {
+	if err = h.linkRepo.Insert(ctx, dbCtx, links); err != nil {
 		slog.Debug("Failed to insert links for existing note", "noteID", note.ID(), "error", err)
 		return err
 	}
 
-	if err = tagRepo.InsertNoteTags(ctx, note.ID(), file.FrontMatter.Tags); err != nil {
+	if err = h.tagRepo.InsertNoteTags(ctx, dbCtx, note.ID(), file.FrontMatter.Tags); err != nil {
 		slog.Debug("Failed to insert tags for existing note", "noteID", note.ID(), "error", err)
 		return err
 	}
@@ -125,11 +129,15 @@ func (h *SaveNoteHandler) handleExistingNote(ctx context.Context,
 	return nil
 }
 
-func (h *SaveNoteHandler) deleteExistingNoteRelations(ctx context.Context, linkRepo repositories.ILinkRepository, tagRepo repositories.ITagRepository, noteID string) error {
-	if err := linkRepo.Delete(ctx, noteID); err != nil {
+func (h *SaveNoteHandler) deleteExistingNoteRelations(
+	ctx context.Context,
+	dbCtx persistence.IDbContext,
+	noteID string,
+) error {
+	if err := h.linkRepo.Delete(ctx, dbCtx, noteID); err != nil {
 		return err
 	}
-	if err := tagRepo.DeleteNoteTags(ctx, noteID); err != nil {
+	if err := h.tagRepo.DeleteNoteTags(ctx, dbCtx, noteID); err != nil {
 		return err
 	}
 	return nil
