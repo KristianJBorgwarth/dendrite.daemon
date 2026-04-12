@@ -7,6 +7,7 @@ import (
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
@@ -16,19 +17,21 @@ type saveNoteCommand struct {
 }
 
 type SaveNoteHandler struct {
-	uow      *repositories.UnitOfWork
-	linkRepo repositories.ILinkRepository
-	tagRepo  repositories.ITagRepository
-	noteRepo repositories.NoteRepository
+	uow         *repositories.UnitOfWork
+	linkRepo    repositories.ILinkRepository
+	tagService  services.ITagService
+	noteService services.INoteService
+	noteRepo    repositories.NoteRepository
 }
 
 func NewSaveNoteHandler(
 	uow *repositories.UnitOfWork,
 	linkRepo repositories.ILinkRepository,
-	tagRepo repositories.ITagRepository,
+	tagService services.ITagService,
+	noteService services.INoteService,
 	noteRepo repositories.NoteRepository,
 ) *SaveNoteHandler {
-	return &SaveNoteHandler{uow, linkRepo, tagRepo, noteRepo}
+	return &SaveNoteHandler{uow, linkRepo, tagService, noteService, noteRepo}
 }
 
 func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -49,7 +52,6 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	if err != nil {
 		return nil, err
 	}
-
 	defer h.uow.Rollback()
 
 	note, err := h.noteRepo.GetBySlug(ctx, tx, file.Slug)
@@ -57,6 +59,7 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 		slog.Debug("Failed to get note by slug", "slug", file.Slug, "error", err)
 		return nil, err
 	}
+
 
 	if note == nil {
 		if err := h.handleNewNote(ctx, tx, file); err != nil {
@@ -94,8 +97,14 @@ func (h *SaveNoteHandler) handleNewNote(
 		return err
 	}
 
-	if err := h.tagRepo.InsertNoteTags(ctx, dbCtx, note.ID(), file.FrontMatter.Tags); err != nil {
-		slog.Debug("Failed to insert tags for new note", "noteID", note.ID(), "error", err)
+	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, file.FrontMatter.Tags)
+	if err != nil {
+		slog.Debug("Failed to create tags for new note", "noteID", note.ID(), "error", err)
+		return err
+	}
+
+	if err := h.tagService.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
+		slog.Debug("Failed to insert note tags for new note", "noteID", note.ID(), "error", err)
 		return err
 	}
 
@@ -108,7 +117,7 @@ func (h *SaveNoteHandler) handleExistingNote(
 	note *models.Note,
 	file *filehandling.File,
 ) error {
-	err := h.deleteExistingNoteRelations(ctx, dbCtx, note.ID())
+	err := h.noteService.DeleteNote(ctx, dbCtx, note.ID())
 	if err != nil {
 		slog.Debug("Failed to delete existing note relations", "noteID", note.ID(), "error", err)
 		return err
@@ -121,28 +130,16 @@ func (h *SaveNoteHandler) handleExistingNote(
 		return err
 	}
 
-	if err = h.tagRepo.InsertNoteTags(ctx, dbCtx, note.ID(), file.FrontMatter.Tags); err != nil {
-		slog.Debug("Failed to insert tags for existing note", "noteID", note.ID(), "error", err)
+	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, file.FrontMatter.Tags)
+	if err != nil {
+		slog.Debug("Failed to create tags for existing note", "noteID", note.ID(), "error", err)
+		return err
+	}
+
+	if err = h.tagService.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
+		slog.Debug("Failed to insert note tags for existing note", "noteID", note.ID(), "error", err)
 		return err
 	}
 
 	return nil
-}
-
-func (h *SaveNoteHandler) deleteExistingNoteRelations(
-	ctx context.Context,
-	dbCtx persistence.IDbContext,
-	noteID string,
-) error {
-	if err := h.linkRepo.Delete(ctx, dbCtx, noteID); err != nil {
-		return err
-	}
-	if err := h.tagRepo.DeleteNoteTags(ctx, dbCtx, noteID); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (h *SaveNoteHandler) handleTags(ctx context.Context, tagRepo repositories.ITagRepository, noteID string, tags []string) error {
-	panic("not implemented")
 }
