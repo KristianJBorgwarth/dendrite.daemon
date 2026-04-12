@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/note"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -15,7 +16,7 @@ import (
 func newCreateNoteHandler() *note.CreateNoteHandler {
 	return note.NewCreateNoteHandler(
 		repositories.NewUnitOfWork(),
-		repositories.NewTagRepository(),
+		services.NewTagService(repositories.NewTagRepository()),
 		repositories.NewNoteRepository(),
 	)
 }

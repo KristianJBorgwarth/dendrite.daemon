@@ -7,7 +7,7 @@ import (
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
@@ -19,14 +19,14 @@ type createNoteCommand struct {
 }
 
 type CreateNoteHandler struct {
-	uow      *repositories.UnitOfWork
-	tagRepo  repositories.ITagRepository
-	noteRepo repositories.NoteRepository
+	uow        *repositories.UnitOfWork
+	tagService services.ITagService
+	noteRepo   repositories.NoteRepository
 }
 
 func NewCreateNoteHandler(
 	uow *repositories.UnitOfWork,
-	tagRepo repositories.ITagRepository,
+	tagRepo services.ITagService,
 	noteRepo repositories.NoteRepository,
 ) *CreateNoteHandler {
 	return &CreateNoteHandler{uow, tagRepo, noteRepo}
@@ -53,30 +53,10 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	defer h.uow.Rollback()
 
-	dbTags, err := h.tagRepo.GetByNames(ctx, dbCtx, template.FrontMatter.Tags)
+	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, template.FrontMatter.Tags)
 	if err != nil {
 		return nil, err
 	}
-
-	newTags := utils.Filter(template.FrontMatter.Tags, func(name string) bool {
-		for _, t := range dbTags {
-			if t.Name() == name {
-				return false
-			}
-		}
-		return true
-	})
-
-	tagModels, err := models.CreateTags(newTags)
-	if err != nil {
-		return nil, err
-	}
-
-	if err = h.tagRepo.Insert(ctx, dbCtx, tagModels); err != nil {
-		return nil, err
-	}
-
-	tagModels = append(tagModels, dbTags...)
 
 	note := models.CreateNote(notePath, cmd.Title, template.Slug)
 
@@ -84,7 +64,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	if err = h.tagRepo.InsertNoteTags(ctx, dbCtx, note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
+	if err = h.tagService.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
 		return nil, err
 	}
 
