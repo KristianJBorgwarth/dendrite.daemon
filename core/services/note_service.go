@@ -11,6 +11,7 @@ import (
 type INoteService interface {
 	CreateNote(ctx context.Context, dbCtx persistence.IDbContext, path, title, slug string) (*models.Note, error)
 	DeleteNoteMetaData(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
+	UpdateNote(ctx context.Context, dbCtx persistence.IDbContext, noteID, path, title, slug string) error
 }
 
 type noteService struct {
@@ -28,12 +29,19 @@ func NewNoteService(
 }
 
 func (s *noteService) CreateNote(ctx context.Context, dbCtx persistence.IDbContext, path, title, slug string) (*models.Note, error) {
-	note:= models.CreateNote(path, title, slug)
+	note := models.CreateNote(path, title, slug)
 	if err := s.noteRepo.Insert(ctx, dbCtx, note); err != nil {
 		return nil, err
 	}
 
 	return note, nil
+}
+
+func (s *noteService) UpdateNote(ctx context.Context, dbCtx persistence.IDbContext, noteID, path, title, slug string) error {
+	if err := s.noteRepo.Update(ctx, dbCtx, noteID, path, title, slug); err != nil {
+		return err
+	}
+	return nil
 }
 
 func (s *noteService) DeleteNoteMetaData(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error {
