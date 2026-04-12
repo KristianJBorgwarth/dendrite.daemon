@@ -7,6 +7,7 @@ import (
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -42,18 +43,18 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	}
 
 	defer h.uow.Rollback()
-	noteRepo := repositories.NewNoteRepository(tx)
+	noteRepo := repositories.NewNoteRepository()
 	linkRepo := repositories.NewLinkRepository(tx)
 	tagRepo := repositories.NewTagRepository(tx)
 
-	note, err := noteRepo.GetBySlug(ctx, file.Slug)
+	note, err := noteRepo.GetBySlug(ctx, tx, file.Slug)
 	if err != nil {
 		slog.Debug("Failed to get note by slug", "slug", file.Slug, "error", err)
 		return nil, err
 	}
 
 	if note == nil {
-		if err := h.handleNewNote(ctx, noteRepo, linkRepo, tagRepo, file); err != nil {
+		if err := h.handleNewNote(ctx, tx, noteRepo, linkRepo, tagRepo, file); err != nil {
 			return nil, err
 		}
 	} else {
@@ -70,6 +71,7 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 
 func (h *SaveNoteHandler) handleNewNote(
 	ctx context.Context,
+	IDbContext persistence.IDbContext,
 	noteRepo repositories.NoteRepository,
 	linkRepo repositories.ILinkRepository,
 	tagRepo repositories.ITagRepository,
@@ -78,7 +80,7 @@ func (h *SaveNoteHandler) handleNewNote(
 	note := models.CreateNote(file.Path, file.Title, file.Slug)
 	slog.Debug("EXTRACTED FILE", "path", file.Path, "title", file.Title, "slug", file.Slug, "links", file.ExtractedLinks, "tags", file.FrontMatter.Tags)
 
-	if err := noteRepo.Insert(ctx, note); err != nil {
+	if err := noteRepo.Insert(ctx, IDbContext, note); err != nil {
 		slog.Debug("Failed to insert new note", "noteID", note.ID(), "error", err)
 		return err
 	}

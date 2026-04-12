@@ -48,7 +48,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	defer h.uow.Rollback()
 
 	tagRepo := repositories.NewTagRepository(dbCtx)
-	noteRepo := repositories.NewNoteRepository(dbCtx)
+	noteRepo := repositories.NewNoteRepository()
 
 	dbTags, err := tagRepo.GetByNames(ctx, template.FrontMatter.Tags)
 	if err != nil {
@@ -77,7 +77,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	note := models.CreateNote(notePath, cmd.Title, template.Slug)
 
-	if err = noteRepo.Insert(ctx, note); err != nil {
+	if err = noteRepo.Insert(ctx, dbCtx, note); err != nil {
 		return nil, err
 	}
 
