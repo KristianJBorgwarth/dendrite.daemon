@@ -14,17 +14,14 @@ func NewTag(id, name string) *Tag {
 	}
 }
 
-func CreateTags(tags []string) ([]*Tag, error) {
+func CreateTags(tags []string) ([]*Tag) {
 	tagModels := make([]*Tag, len(tags))
 	for i, tag := range tags {
-		id, err := uuid.NewV7()
-		if err != nil {
-			panic(err)
-		}
+		id, _ := uuid.NewV7()
 		tagModels[i] = NewTag(id.String(), tag)
 	}
 
-	return tagModels, nil
+	return tagModels
 }
 
 func (t *Tag) ID() string {
