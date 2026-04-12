@@ -46,6 +46,8 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 		return nil, err
 	}
 
+	slog.Debug("Parsed file", "path", cmd.Path, "slug", file.Slug, "title", file.Title, "tags", file.FrontMatter.Tags, "links", file.ExtractedLinks)
+
 	tx, err := h.uow.Begin()
 	if err != nil {
 		return nil, err
@@ -67,6 +69,10 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	} else {
 		if err = h.noteService.DeleteNoteMetaData(ctx, tx, note.ID()); err != nil {
 			slog.Debug("Failed to delete existing note metadata", "noteID", note.ID(), "error", err)
+			return nil, err
+		}
+		if err = h.noteService.UpdateNote(ctx, tx, note.ID(), file.Path, file.Title, file.Slug); err != nil {
+			slog.Debug("Failed to update existing note", "noteID", note.ID(), "error", err)
 			return nil, err
 		}
 	}
