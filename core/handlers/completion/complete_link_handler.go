@@ -27,6 +27,7 @@ func (h *CompleteLinkHandler) Handle(ctx context.Context, raw json.RawMessage) (
 	}
 	slog.Debug("handling complete link command", "query", cmd.Query)
 
+	// this is just a stub and the client is expecting the title/display too
 	return []completionItem{
 		{Slug: "standard-streams"},
 		{Slug: "unit-of-work"},
