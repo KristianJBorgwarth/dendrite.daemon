@@ -21,13 +21,13 @@ type createNoteCommand struct {
 type CreateNoteHandler struct {
 	uow        *repositories.UnitOfWork
 	tagService services.ITagService
-	noteRepo   repositories.NoteRepository
+	noteRepo   repositories.INoteRepository
 }
 
 func NewCreateNoteHandler(
 	uow *repositories.UnitOfWork,
 	tagRepo services.ITagService,
-	noteRepo repositories.NoteRepository,
+	noteRepo repositories.INoteRepository,
 ) *CreateNoteHandler {
 	return &CreateNoteHandler{uow, tagRepo, noteRepo}
 }

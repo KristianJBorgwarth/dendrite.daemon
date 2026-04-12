@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/utils"
@@ -18,7 +19,7 @@ type tagService struct {
 	tagRepo repositories.ITagRepository
 }
 
-func NewTagService(tagRepo repositories.ITagRepository) *tagService {
+func NewTagService(tagRepo repositories.ITagRepository) ITagService {
 	return &tagService{tagRepo}
 }
 
@@ -27,6 +28,8 @@ func (s *tagService) CreateTags(ctx context.Context, dbCtx persistence.IDbContex
 	if err != nil {
 		return nil, err
 	}
+
+	slog.Debug("Existing tags", "names", names, "existingTags", existingTags)
 
 	newTags := utils.Filter(names, func(name string) bool {
 		for _, tag := range existingTags {
@@ -42,6 +45,8 @@ func (s *tagService) CreateTags(ctx context.Context, dbCtx persistence.IDbContex
 	if err = s.tagRepo.Insert(ctx, dbCtx,  newTagModels); err != nil {
 		return nil, err
 	}
+
+	slog.Debug("Created new tags", "newTags", newTagModels)
 
 	tags := append(existingTags, newTagModels...)
 
