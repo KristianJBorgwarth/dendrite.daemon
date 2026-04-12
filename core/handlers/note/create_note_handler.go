@@ -19,11 +19,17 @@ type createNoteCommand struct {
 }
 
 type CreateNoteHandler struct {
-	uow *repositories.UnitOfWork
+	uow      *repositories.UnitOfWork
+	tagRepo  repositories.ITagRepository
+	noteRepo repositories.NoteRepository
 }
 
-func NewCreateNoteHandler() *CreateNoteHandler {
-	return &CreateNoteHandler{repositories.NewUnitOfWork()}
+func NewCreateNoteHandler(
+	uow *repositories.UnitOfWork,
+	tagRepo repositories.ITagRepository,
+	noteRepo repositories.NoteRepository,
+) *CreateNoteHandler {
+	return &CreateNoteHandler{uow, tagRepo, noteRepo}
 }
 
 func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -47,10 +53,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	defer h.uow.Rollback()
 
-	tagRepo := repositories.NewTagRepository(dbCtx)
-	noteRepo := repositories.NewNoteRepository()
-
-	dbTags, err := tagRepo.GetByNames(ctx, template.FrontMatter.Tags)
+	dbTags, err := h.tagRepo.GetByNames(ctx, dbCtx, template.FrontMatter.Tags)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +72,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	if err = tagRepo.Insert(ctx, tagModels); err != nil {
+	if err = h.tagRepo.Insert(ctx, dbCtx, tagModels); err != nil {
 		return nil, err
 	}
 
@@ -77,11 +80,11 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 
 	note := models.CreateNote(notePath, cmd.Title, template.Slug)
 
-	if err = noteRepo.Insert(ctx, dbCtx, note); err != nil {
+	if err = h.noteRepo.Insert(ctx, dbCtx, note); err != nil {
 		return nil, err
 	}
 
-	if err = tagRepo.InsertNoteTags(ctx, note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
+	if err = h.tagRepo.InsertNoteTags(ctx, dbCtx, note.ID(), utils.Select(tagModels, func(t *models.Tag) string { return t.ID() })); err != nil {
 		return nil, err
 	}
 

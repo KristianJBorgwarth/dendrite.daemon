@@ -9,21 +9,19 @@ import (
 )
 
 type ITagRepository interface {
-	Insert(ctx context.Context, tags []*models.Tag) error
-	InsertNoteTags(ctx context.Context, noteID string, tagIDs []string) error
-	GetByNames(ctx context.Context, names []string) ([]*models.Tag, error)
-	DeleteNoteTags(ctx context.Context, noteID string) error
+	Insert(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error
+	InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tagIDs []string) error
+	GetByNames(ctx context.Context, dbCtx persistence.IDbContext, names []string) ([]*models.Tag, error)
+	DeleteNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
 }
 
-type tagRepository struct {
-	dbContext persistence.IDbContext
+type tagRepository struct{}
+
+func NewTagRepository() ITagRepository {
+	return &tagRepository{}
 }
 
-func NewTagRepository(ctx persistence.IDbContext) ITagRepository {
-	return &tagRepository{dbContext: ctx}
-}
-
-func (r *tagRepository) Insert(ctx context.Context, tags []*models.Tag) error {
+func (r *tagRepository) Insert(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
@@ -38,11 +36,11 @@ func (r *tagRepository) Insert(ctx context.Context, tags []*models.Tag) error {
 
 	query := "INSERT OR IGNORE INTO tag(id, name) VALUES " + strings.Join(placeholders, ",")
 
-	_, err := r.dbContext.ExecContext(ctx, query, args...)
+	_, err := dbCtx.ExecContext(ctx, query, args...)
 	return err
 }
 
-func (r *tagRepository) InsertNoteTags(ctx context.Context ,noteID string, tagIDs []string) error {
+func (r *tagRepository) InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tagIDs []string) error {
 	if len(tagIDs) == 0 {
 		return nil
 	}
@@ -57,7 +55,7 @@ func (r *tagRepository) InsertNoteTags(ctx context.Context ,noteID string, tagID
 
 	query := "INSERT OR IGNORE INTO note_tag(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
 
-	_, err := r.dbContext.ExecContext(ctx, query, args...)
+	_, err := dbCtx.ExecContext(ctx, query, args...)
 	if err != nil {
 		return err
 	}
@@ -65,7 +63,7 @@ func (r *tagRepository) InsertNoteTags(ctx context.Context ,noteID string, tagID
 	return nil
 }
 
-func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*models.Tag, error) {
+func (r *tagRepository) GetByNames(ctx context.Context, dbCtx persistence.IDbContext, names []string) ([]*models.Tag, error) {
 	if len(names) == 0 {
 		return []*models.Tag{}, nil
 	}
@@ -80,7 +78,7 @@ func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*mode
 
 	query := "SELECT id, name FROM tag WHERE name IN (" + strings.Join(placeholders, ",") + ")"
 
-	rows, err := r.dbContext.QueryContext(ctx, query, args...)
+	rows, err := dbCtx.QueryContext(ctx, query, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -99,8 +97,8 @@ func (r *tagRepository) GetByNames(ctx context.Context, names []string) ([]*mode
 	return tags, nil
 }
 
-func (r *tagRepository) DeleteNoteTags(ctx context.Context, noteID string) error {
+func (r *tagRepository) DeleteNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error {
 	query := "DELETE FROM note_tag WHERE note_id = ?"
-	_, err := r.dbContext.ExecContext(ctx, query, noteID)
+	_, err := dbCtx.ExecContext(ctx, query, noteID)
 	return err
 }

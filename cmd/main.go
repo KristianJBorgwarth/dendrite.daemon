@@ -9,6 +9,7 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/vault"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/logging"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/server"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 	_ "modernc.org/sqlite"
 )
 
@@ -16,9 +17,14 @@ func main() {
 	logging.Init()
 	server := server.NewServer()
 
+	uow := repositories.NewUnitOfWork();
+	linkRepo := repositories.NewLinkRepository()
+	tagRepo := repositories.NewTagRepository()
+	noteRepo := repositories.NewNoteRepository()
+
 	server.RegisterHandler("vault/init", vault.NewInitializeHandler())
-	server.RegisterHandler("note/create", note.NewCreateNoteHandler())
-	server.RegisterHandler("note/save", note.NewSaveNoteHandler())
+	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagRepo, noteRepo))
+	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, linkRepo, tagRepo, noteRepo))
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler())
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
