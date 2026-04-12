@@ -9,14 +9,14 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
-type NoteRepository interface {
+type INoteRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, note *models.Note) error
 	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, slug string) (*models.Note, error)
 }
 
 type noteRepository struct{}
 
-func NewNoteRepository() NoteRepository {
+func NewNoteRepository() INoteRepository {
 	return &noteRepository{}
 }
 

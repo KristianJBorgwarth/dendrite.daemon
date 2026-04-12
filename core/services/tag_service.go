@@ -18,7 +18,7 @@ type tagService struct {
 	tagRepo repositories.ITagRepository
 }
 
-func NewTagService(tagRepo repositories.ITagRepository) *tagService {
+func NewTagService(tagRepo repositories.ITagRepository) ITagService {
 	return &tagService{tagRepo}
 }
 

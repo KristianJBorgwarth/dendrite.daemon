@@ -6,9 +6,7 @@ import (
 	"log/slog"
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
-	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
-	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -18,20 +16,20 @@ type saveNoteCommand struct {
 
 type SaveNoteHandler struct {
 	uow         *repositories.UnitOfWork
-	linkRepo    repositories.ILinkRepository
+	noteRepo    repositories.INoteRepository
 	tagService  services.ITagService
 	noteService services.INoteService
-	noteRepo    repositories.NoteRepository
+	linkService services.ILinkService
 }
 
 func NewSaveNoteHandler(
 	uow *repositories.UnitOfWork,
-	linkRepo repositories.ILinkRepository,
-	tagService services.ITagService,
-	noteService services.INoteService,
-	noteRepo repositories.NoteRepository,
+	nr repositories.INoteRepository,
+	ts services.ITagService,
+	ns services.INoteService,
+	ls services.ILinkService,
 ) *SaveNoteHandler {
-	return &SaveNoteHandler{uow, linkRepo, tagService, noteService, noteRepo}
+	return &SaveNoteHandler{uow, nr, ts, ns, ls}
 }
 
 func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -60,86 +58,37 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 		return nil, err
 	}
 
-
 	if note == nil {
-		if err := h.handleNewNote(ctx, tx, file); err != nil {
+		note, err = h.noteService.CreateNote(ctx, tx, file.Path, file.Title, file.Slug)
+		if err != nil {
+			slog.Debug("Failed to save new note", "slug", file.Slug, "error", err)
 			return nil, err
 		}
 	} else {
-		if err := h.handleExistingNote(ctx, tx, note, file); err != nil {
+		if err = h.noteService.DeleteNoteMetaData(ctx, tx, note.ID()); err != nil {
+			slog.Debug("Failed to delete existing note metadata", "noteID", note.ID(), "error", err)
 			return nil, err
 		}
+	}
+
+	tagModels, err := h.tagService.CreateTags(ctx, tx, file.FrontMatter.Tags)
+	if err != nil {
+		slog.Debug("Failed to create tags", "tags", file.FrontMatter.Tags, "error", err)
+		return nil, err
+	}
+
+	if err = h.tagService.CreateNoteTags(ctx, tx, note.ID(), tagModels); err != nil {
+		slog.Debug("Failed to create note tags", "noteID", note.ID(), "tags", file.FrontMatter.Tags, "error", err)
+		return nil, err
+	}
+
+	if err = h.linkService.CreateLinks(ctx, tx, note.ID(), file.ExtractedLinks); err != nil {
+		slog.Debug("Failed to create links", "noteID", note.ID(), "links", file.ExtractedLinks, "error", err)
+		return nil, err
 	}
 
 	if err := h.uow.Commit(); err != nil {
 		return nil, err
 	}
 	return nil, nil
-}
-
-func (h *SaveNoteHandler) handleNewNote(
-	ctx context.Context,
-	dbCtx persistence.IDbContext,
-	file *filehandling.File,
-) error {
-	note := models.CreateNote(file.Path, file.Title, file.Slug)
-	slog.Debug("EXTRACTED FILE", "path", file.Path, "title", file.Title, "slug", file.Slug, "links", file.ExtractedLinks, "tags", file.FrontMatter.Tags)
-
-	if err := h.noteRepo.Insert(ctx, dbCtx, note); err != nil {
-		slog.Debug("Failed to insert new note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	links := models.MapToLinkModel(note.ID(), file.ExtractedLinks)
-
-	if err := h.linkRepo.Insert(ctx, dbCtx, links); err != nil {
-		slog.Debug("Failed to insert links for new note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, file.FrontMatter.Tags)
-	if err != nil {
-		slog.Debug("Failed to create tags for new note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	if err := h.tagService.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
-		slog.Debug("Failed to insert note tags for new note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	return nil
-}
-
-func (h *SaveNoteHandler) handleExistingNote(
-	ctx context.Context,
-	dbCtx persistence.IDbContext,
-	note *models.Note,
-	file *filehandling.File,
-) error {
-	err := h.noteService.DeleteNote(ctx, dbCtx, note.ID())
-	if err != nil {
-		slog.Debug("Failed to delete existing note relations", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	links := models.MapToLinkModel(note.ID(), file.ExtractedLinks)
-
-	if err = h.linkRepo.Insert(ctx, dbCtx, links); err != nil {
-		slog.Debug("Failed to insert links for existing note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, file.FrontMatter.Tags)
-	if err != nil {
-		slog.Debug("Failed to create tags for existing note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	if err = h.tagService.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
-		slog.Debug("Failed to insert note tags for existing note", "noteID", note.ID(), "error", err)
-		return err
-	}
-
-	return nil
 }

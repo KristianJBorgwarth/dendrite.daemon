@@ -23,10 +23,12 @@ func main() {
 	tagRepo := repositories.NewTagRepository()
 	noteRepo := repositories.NewNoteRepository()
 	tagService := services.NewTagService(tagRepo)
+	linkService := services.NewLinkService(linkRepo)
+	noteService := services.NewNoteService(tagRepo, linkRepo, noteRepo)
 
 	server.RegisterHandler("vault/init", vault.NewInitializeHandler())
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo))
-	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, linkRepo, tagRepo, noteRepo))
+	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler())
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
