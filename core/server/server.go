@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/rpc"
@@ -82,6 +83,7 @@ func (s *Server) respond(w io.Writer, id *int, result any, err *rpc.Error) {
 		Error:   err,
 	}
 
+	slog.Debug("Responding to request", "response", resp)
 	s.write(w, resp)
 }
 
