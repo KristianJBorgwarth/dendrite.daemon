@@ -54,7 +54,7 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	}
 	defer h.uow.Rollback()
 
-	note, err := h.noteRepo.GetBySlug(ctx, tx, file.Slug)
+	note, err := h.noteRepo.GetBySlug(ctx, file.Slug)
 	if err != nil {
 		slog.Debug("Failed to get note by slug", "slug", file.Slug, "error", err)
 		return nil, err
