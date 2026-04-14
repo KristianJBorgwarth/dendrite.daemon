@@ -12,10 +12,12 @@ import (
 type INoteRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, note *models.Note) error
 	Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error
-	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, slug string) (*models.Note, error)
+	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
 }
 
-type noteRepository struct{}
+type noteRepository struct{
+	readDBContext persistence.ReadContext
+}
 
 func NewNoteRepository(persistence.ReadContext) INoteRepository {
 	return &noteRepository{}
@@ -46,9 +48,9 @@ func (r *noteRepository) Update(ctx context.Context, dbContext persistence.IDbCo
 	return nil
 }
 
-func (r *noteRepository) GetBySlug(ctx context.Context, dbContext persistence.IDbContext, slug string) (*models.Note, error) {
+func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.Note, error) {
 	query := `SELECT id, title, path, slug, created_at, updated_at FROM note WHERE slug = ?`
-	row := dbContext.QueryRowContext(ctx, query, slug)
+	row := r.readDBContext.QueryRowContext(ctx, query, slug)
 
 	var id, title, path, createdAt, updatedAt string
 	err := row.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt)

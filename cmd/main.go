@@ -22,7 +22,7 @@ func main() {
 	uow := repositories.NewUnitOfWork();
 	linkRepo := repositories.NewLinkRepository(*persistence.NewReadContext())
 	tagRepo := repositories.NewTagRepository()
-	noteRepo := repositories.NewNoteRepository()
+	noteRepo := repositories.NewNoteRepository(*persistence.NewReadContext())
 	tagService := services.NewTagService(tagRepo)
 	linkService := services.NewLinkService(linkRepo)
 	noteService := services.NewNoteService(tagRepo, linkRepo, noteRepo)
