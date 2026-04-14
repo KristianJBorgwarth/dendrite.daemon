@@ -13,3 +13,10 @@ type gotoNoteResult struct {
 type GotoNoteHandler struct{
 	noteRepo repositories.INoteRepository
 }
+
+func(h *GotoNoteHandler) Handle(command gotoNoteCommand) (gotoNoteResult, error) {
+	note, err := h.noteRepo.GetBySlug(command.Slug)
+	if err != nil {
+		return gotoNoteResult{}, err
+	}
+}

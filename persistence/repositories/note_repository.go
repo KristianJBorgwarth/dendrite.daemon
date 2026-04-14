@@ -17,7 +17,7 @@ type INoteRepository interface {
 
 type noteRepository struct{}
 
-func NewNoteRepository() INoteRepository {
+func NewNoteRepository(persistence.ReadContext) INoteRepository {
 	return &noteRepository{}
 }
 
