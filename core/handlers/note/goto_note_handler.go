@@ -3,9 +3,9 @@ package note
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
-	"strings"
+	"errors"
 
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -14,7 +14,8 @@ type gotoNoteCommand struct {
 }
 
 type gotoNoteResult struct {
-	Path string `json:"path"`
+	Target string `json:"target"`
+	Type   string `json:"type,omitempty"`
 }
 
 type GotoNoteHandler struct {
@@ -31,26 +32,23 @@ func (h *GotoNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 		return nil, err
 	}
 
-	cmd.Link = h.resolveLink(cmd.Link)
+	parsedLink := filehandling.ParseLink(cmd.Link)
+	switch parsedLink.Kind {
 
-	note, err := h.noteRepo.GetBySlug(ctx, cmd.Link)
-	if err != nil {
-		return nil, err
-	}
-	if note == nil {
-		slog.Debug("Note not found for link", "link", cmd.Link)
-		return nil, nil
-	}
-	return gotoNoteResult{Path: note.Path()}, nil
-}
+	case filehandling.Note:
+		note, err := h.noteRepo.GetBySlug(ctx, parsedLink.Target)
+		if err != nil {
+			return nil, err
+		}
+		if note == nil {
+			return nil, nil
+		}
+		return gotoNoteResult{Target: note.Path(), Type: "note"}, nil
 
-func (h *GotoNoteHandler) resolveLink(link string) string {
-	if len(link) < 5 || link[:2] != "[[" || link[len(link)-2:] != "]]" {
-		return link
+	case filehandling.URL:
+		return gotoNoteResult{Target: parsedLink.Target, Type: "url"}, nil
+
+	default:
+		return nil, errors.New("unsupported link type")
 	}
-	content := link[2 : len(link)-2]
-	if before, _, ok := strings.Cut(content, "|"); ok {
-		return before
-	}
-	return content
 }
