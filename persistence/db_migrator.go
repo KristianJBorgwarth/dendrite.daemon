@@ -13,9 +13,13 @@ import (
 var migrationsFS embed.FS
 
 func InitializeIndex(vaultPath string) (*sql.DB, error) {
-	indexDir := filepath.Join(vaultPath, ".index")
+	indexDir, err := getIndexDBPath(vaultPath)
+	if err != nil {
+		slog.Error("failed to get index directory path", "error", err)
+		return nil, err
+	}
 
-	if err := os.MkdirAll(indexDir, 0755); err != nil {
+	if err = os.MkdirAll(indexDir, 0755); err != nil {
 		slog.Error("failed to create index directory", "error", err)
 		return nil, err
 	}
