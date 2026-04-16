@@ -12,7 +12,7 @@ func NewNoteTag(noteID, tagID string) *NoteTag {
 	}
 }
 
-func NewNoteTags(noteID string, tagIDs []string) []*NoteTag {
+func CreateNoteTags(noteID string, tagIDs []string) []*NoteTag {
 	noteTags := make([]*NoteTag, len(tagIDs))
 	for i, tagID := range tagIDs {
 		noteTags[i] = NewNoteTag(noteID, tagID)
