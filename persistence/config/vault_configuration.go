@@ -1,12 +1,17 @@
 package persistenceconfig
 
 type VaultConfiguration struct {
+	name              string
 	path              string
 	templateDirectory string
 }
 
-func NewVaultConfiguration(vaultPath, templateDirectory string) *VaultConfiguration {
-	return &VaultConfiguration{path: vaultPath, templateDirectory: templateDirectory}
+func NewVaultConfiguration(vaultName, vaultPath, templateDirectory string) *VaultConfiguration {
+	return &VaultConfiguration{name: vaultName, path: vaultPath, templateDirectory: templateDirectory}
+}
+
+func (vc *VaultConfiguration) VaultName() string {
+	return vc.name
 }
 
 func (vc *VaultConfiguration) VaultPath() string {

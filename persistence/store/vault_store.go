@@ -12,11 +12,11 @@ type VaultStore struct {
 
 var vaultStore *VaultStore
 
-func NewVaultStore(vault, templateDir string) *VaultStore {
+func NewVaultStore(vaultName, vaultPath, templateDir string) *VaultStore {
 	if vaultStore != nil {
 		return vaultStore
 	}
-	vaultStore = &VaultStore{Config: persistenceconfig.NewVaultConfiguration(vault, templateDir)}
+	vaultStore = &VaultStore{Config: persistenceconfig.NewVaultConfiguration(vaultName, vaultPath, templateDir)}
 	return vaultStore
 }
 

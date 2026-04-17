@@ -19,7 +19,7 @@ type DBFixture struct {
 	DB          *sql.DB
 	DBPath      string
 	TestContext context.Context
-	VaultStore *store.VaultStore
+	VaultStore  *store.VaultStore
 }
 
 func NewDBFixture() *DBFixture {
@@ -38,7 +38,7 @@ func NewDBFixture() *DBFixture {
 		DB:          dbContext.DB,
 		DBPath:      dbPath,
 		TestContext: context.Background(),
-		VaultStore: store.NewVaultStore(vaultPath, path.Join(vaultPath, "templates")),
+		VaultStore:  store.NewVaultStore("testVault", vaultPath, path.Join(vaultPath, "templates")),
 	}
 }
 

@@ -9,6 +9,7 @@ import (
 )
 
 type initializeCommand struct {
+	VaultName         string `json:"vaultName"`
 	VaultPath         string `json:"vaultPath"`
 	TemplateDirectory string `json:"templateDirectory"`
 }
@@ -26,9 +27,9 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
-	store := store.NewVaultStore(cmd.VaultPath, cmd.TemplateDirectory)
+	store := store.NewVaultStore(cmd.VaultName, cmd.VaultPath, cmd.TemplateDirectory)
 
-	err := persistence.InitializeDBContext(store.Config.VaultPath())
+	err := persistence.InitializeDBContext(store.Config.VaultName())
 	if err != nil {
 		return nil, err
 	}

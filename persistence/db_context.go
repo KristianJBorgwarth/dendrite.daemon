@@ -11,8 +11,8 @@ type Database struct {
 var dbContext *Database
 
 
-func InitializeDBContext(vaultPath string) (error) {
-	db, err := InitializeIndex(vaultPath)
+func InitializeDBContext(vaultName string) (error) {
+	db, err := InitializeIndex(vaultName)
 	if err != nil {
 		return err
 	}
