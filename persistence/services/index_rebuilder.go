@@ -35,7 +35,22 @@ func (r *IndexRebuilder) RebuildIndex(vaultRoot string) error {
 		return err
 	}
 
-	if err = r.InsertData(tx, notes, links, tags, noteTags); err != nil {
+	if err = r.InsertNotes(tx, notes); err != nil {
+		tx.Rollback()
+		return err
+	}
+	
+	if err = r.InsertLinks(tx, links); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = r.InsertTags(tx, tags); err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	if err = r.InsertNoteTags(tx, noteTags); err != nil {
 		tx.Rollback()
 		return err
 	}
@@ -45,12 +60,30 @@ func (r *IndexRebuilder) RebuildIndex(vaultRoot string) error {
 	return nil
 }
 
-func (r *IndexRebuilder) InsertData(
-	tx *sql.Tx, 
-	notes []*models.Note, 
-	links []*models.Link, 
-	tags []*models.Tag, 
-	noteTags []*models.NoteTag) error {
+
+func (r *IndexRebuilder) InsertNotes(tx *sql.Tx, notes []*models.Note) error {
+	noteStmt, err := tx.Prepare(`INSERT INTO note (id, title, slug, path) VALUES (?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+	for _, note := range notes {
+		if _, err = noteStmt.Exec(note.ID(), note.Title(), note.Slug(), note.Path()); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (r *IndexRebuilder) InsertLinks(tx *sql.Tx, links []*models.Link) error {
+	panic("not implemented")
+}
+
+func (r *IndexRebuilder) InsertTags(tx *sql.Tx, tags []*models.Tag) error {
+	panic("not implemented")
+}
+
+func (r *IndexRebuilder) InsertNoteTags(tx *sql.Tx, noteTags []*models.NoteTag) error {
 	panic("not implemented")
 }
 

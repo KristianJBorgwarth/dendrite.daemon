@@ -55,7 +55,7 @@ func (s *tagService) CreateTags(ctx context.Context, dbCtx persistence.IDbContex
 
 func(s *tagService) CreateNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tags []*models.Tag) error {
 	tagIds := utils.Select(tags, func(t *models.Tag) string {
-		return t.ID()
+		return t.Name()
 	});
 
 	return s.tagRepo.InsertNoteTags(ctx, dbCtx, noteID, tagIds)

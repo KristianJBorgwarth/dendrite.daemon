@@ -30,25 +30,25 @@ func (r *tagRepository) Insert(ctx context.Context, dbCtx persistence.IDbContext
 	args := make([]any, 0, len(tags))
 
 	for _, tag := range tags {
-		placeholders = append(placeholders, "(?, ?)")
-		args = append(args, tag.ID(), tag.Name())
+		placeholders = append(placeholders, "(?)")
+		args = append(args, tag.Name())
 	}
 
-	query := "INSERT OR IGNORE INTO tag(id, name) VALUES " + strings.Join(placeholders, ",")
+	query := "INSERT OR IGNORE INTO tag(name) VALUES " + strings.Join(placeholders, ",")
 
 	_, err := dbCtx.ExecContext(ctx, query, args...)
 	return err
 }
 
-func (r *tagRepository) InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tagIDs []string) error {
-	if len(tagIDs) == 0 {
+func (r *tagRepository) InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tags []string) error {
+	if len(tags) == 0 {
 		return nil
 	}
 
-	placeholders := make([]string, 0, len(tagIDs))
-	args := make([]any, 0, len(tagIDs))
+	placeholders := make([]string, 0, len(tags))
+	args := make([]any, 0, len(tags))
 
-	for _, tagID := range tagIDs {
+	for _, tagID := range tags {
 		placeholders = append(placeholders, "(?, ?)")
 		args = append(args, noteID, tagID)
 	}
@@ -76,7 +76,7 @@ func (r *tagRepository) GetByNames(ctx context.Context, dbCtx persistence.IDbCon
 		args = append(args, name)
 	}
 
-	query := "SELECT id, name FROM tag WHERE name IN (" + strings.Join(placeholders, ",") + ")"
+	query := "SELECT name FROM tag WHERE name IN (" + strings.Join(placeholders, ",") + ")"
 
 	rows, err := dbCtx.QueryContext(ctx, query, args...)
 	if err != nil {
@@ -86,12 +86,11 @@ func (r *tagRepository) GetByNames(ctx context.Context, dbCtx persistence.IDbCon
 
 	var tags []*models.Tag
 	for rows.Next() {
-		var id string
 		var name string
-		if err := rows.Scan(&id, &name); err != nil {
+		if err := rows.Scan(&name); err != nil {
 			return nil, err
 		}
-		tags = append(tags, models.NewTag(id, name))
+		tags = append(tags, models.NewTag(name))
 	}
 
 	return tags, nil
