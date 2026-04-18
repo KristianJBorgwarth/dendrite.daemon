@@ -10,7 +10,8 @@ import (
 
 type ITagRepository interface {
 	Insert(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error
-	InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tagIDs []string) error
+	InsertRange(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error
+	InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteTags []*models.NoteTag) error
 	GetByNames(ctx context.Context, dbCtx persistence.IDbContext, names []string) ([]*models.Tag, error)
 	DeleteNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
 }
@@ -40,24 +41,35 @@ func (r *tagRepository) Insert(ctx context.Context, dbCtx persistence.IDbContext
 	return err
 }
 
-func (r *tagRepository) InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string, tags []string) error {
+func (r *tagRepository) InsertRange(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}
 
-	placeholders := make([]string, 0, len(tags))
-	args := make([]any, 0, len(tags))
-
-	for _, tagID := range tags {
-		placeholders = append(placeholders, "(?, ?)")
-		args = append(args, noteID, tagID)
-	}
-
-	query := "INSERT OR IGNORE INTO note_tag(note_id, tag_id) VALUES " + strings.Join(placeholders, ",")
-
-	_, err := dbCtx.ExecContext(ctx, query, args...)
+	tagStatement, err := dbCtx.Prepare(`INSERT OR IGNORE INTO tag (name) VALUES (?)`)
 	if err != nil {
 		return err
+	}
+
+	for _, tag := range tags {
+		if _, err = tagStatement.ExecContext(ctx, tag.Name()); err != nil {
+			return err
+		}
+	}
+	
+	return nil
+}	
+
+func (r *tagRepository) InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteTags []*models.NoteTag) error {
+	noteTagStmt, err := dbCtx.Prepare(`INSERT INTO note_tag (note_id, tag_id) VALUES (?, ?)`)
+	if err != nil {
+		return err
+	}
+
+	for _, noteTag := range noteTags {
+		if _, err = noteTagStmt.ExecContext(ctx, noteTag.NoteID(), noteTag.TagID()); err != nil {
+			return err
+		}
 	}
 
 	return nil
