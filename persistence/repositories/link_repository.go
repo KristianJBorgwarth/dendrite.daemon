@@ -10,6 +10,7 @@ import (
 
 type ILinkRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, links []*models.Link) error
+	InsertRange(ctx context.Context, dbContext persistence.IDbContext, links []*models.Link) error
 	GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, targetSlug string) ([]*models.Link, error)
 	Search(ctx context.Context, query string) ([]*models.Link, error)
@@ -41,6 +42,25 @@ func (r *linkRepository) Insert(ctx context.Context, dbContext persistence.IDbCo
 
 	_, err := dbContext.ExecContext(ctx, query, args...)
 	return err
+}
+
+func (r *linkRepository) InsertRange(ctx context.Context, dbContext persistence.IDbContext, links []*models.Link) error {
+	if len(links) == 0 {
+		return nil
+	}
+
+	linkStatement, err := dbContext.Prepare(`INSERT OR IGNORE INTO link (id, from_note_id, target_slug, raw, display, line, col) VALUES (?, ?, ?, ?, ?, ?, ?)`)
+	if err != nil {
+		return err
+	}
+
+	for _, link := range links {
+		if _, err := linkStatement.ExecContext(ctx, link.ID(), link.FromNoteID(), link.TargetSlug(), link.Raw(), link.Display(), link.Line(), link.Col()); err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (r *linkRepository) GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error) {

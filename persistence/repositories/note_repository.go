@@ -11,11 +11,12 @@ import (
 
 type INoteRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, note *models.Note) error
+	InsertRange(ctx context.Context, dbContext persistence.IDbContext, note []*models.Note) error
 	Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error
 	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
 }
 
-type noteRepository struct{
+type noteRepository struct {
 	readDBContext persistence.ReadContext
 }
 
@@ -33,6 +34,24 @@ func (r *noteRepository) Insert(ctx context.Context, dbContext persistence.IDbCo
 	`
 	_, err := dbContext.ExecContext(ctx, query, note.ID(), note.Title(), note.Path(), note.Slug())
 	return err
+}
+
+func (r *noteRepository) InsertRange(ctx context.Context, dbContext persistence.IDbContext, notes []*models.Note) error {
+	if len(notes) == 0 {
+		return nil
+	}
+	noteStatement, err := dbContext.Prepare(`
+	INSERT INTO note (id, title, path, slug, created_at, updated_at)
+	VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`)
+	if err != nil {
+		return err
+	}
+	for _, note := range notes {
+		if _, err := noteStatement.ExecContext(ctx, note.ID(), note.Title(), note.Path(), note.Slug()); err != nil {
+			return err
+		}
+	}
+	return nil
 }
 
 func (r *noteRepository) Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error {

@@ -58,5 +58,7 @@ func(s *tagService) CreateNoteTags(ctx context.Context, dbCtx persistence.IDbCon
 		return t.Name()
 	});
 
-	return s.tagRepo.InsertNoteTags(ctx, dbCtx, noteID, tagIds)
+	noteTags := models.CreateNoteTags(noteID, tagIds)
+
+	return s.tagRepo.InsertNoteTags(ctx, dbCtx, noteTags)
 }

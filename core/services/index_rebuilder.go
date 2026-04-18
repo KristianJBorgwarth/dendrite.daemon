@@ -17,10 +17,11 @@ type IIndexRebuilder interface {
 }
 
 type indexRebuilder struct {
-	uow      repositories.UnitOfWork
-	noteRepo repositories.INoteRepository
-	linkRepo repositories.ILinkRepository
-	tagRepo  repositories.ITagRepository
+	uow       repositories.UnitOfWork
+	noteRepo  repositories.INoteRepository
+	linkRepo  repositories.ILinkRepository
+	tagRepo   repositories.ITagRepository
+	indexRepo repositories.IIndexRepository
 }
 
 func NewIndexRebuilder(
@@ -28,6 +29,7 @@ func NewIndexRebuilder(
 	noteRepo repositories.INoteRepository,
 	linkRepo repositories.ILinkRepository,
 	tagRepo repositories.ITagRepository,
+	indexRepo repositories.IIndexRepository,
 ) *indexRebuilder {
 	return &indexRebuilder{
 		uow:      uow,
@@ -41,6 +43,17 @@ func (r *indexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) err
 	files, err := r.readFiles(vaultRoot)
 	if err != nil {
 		slog.Debug("Failed to read files from vault", "vaultRoot", vaultRoot, "error", err)
+		return err
+	}
+
+	dbctx, err := r.uow.Begin()
+	if err != nil {
+		return err
+	}
+
+	if err = r.indexRepo.WipeIndex(ctx, dbctx); err != nil {
+		r.uow.Rollback()
+		slog.Debug("Failed to wipe index, rolling back transaction", "error", err)
 		return err
 	}
 
