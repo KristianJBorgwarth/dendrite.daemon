@@ -10,7 +10,8 @@ type IIndexRepository interface {
 	WipeIndex(ctx context.Context, dbContext persistence.IDbContext) error
 }
 
-type indexRepository struct{}
+type indexRepository struct{
+}
 
 func NewIndexRepository() IIndexRepository {
 	return &indexRepository{}

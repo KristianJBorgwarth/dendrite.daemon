@@ -10,7 +10,7 @@ import (
 
 type ITagRepository interface {
 	Insert(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error
-	InsertRage(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error
+	InsertRange(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error
 	InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteTags []*models.NoteTag) error
 	GetByNames(ctx context.Context, dbCtx persistence.IDbContext, names []string) ([]*models.Tag, error)
 	DeleteNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
@@ -41,7 +41,7 @@ func (r *tagRepository) Insert(ctx context.Context, dbCtx persistence.IDbContext
 	return err
 }
 
-func (r *tagRepository) InsertRage(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error {
+func (r *tagRepository) InsertRange(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error {
 	if len(tags) == 0 {
 		return nil
 	}

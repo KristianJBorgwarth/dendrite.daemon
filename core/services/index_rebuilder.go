@@ -9,6 +9,8 @@ import (
 	"strings"
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -17,7 +19,7 @@ type IIndexRebuilder interface {
 }
 
 type indexRebuilder struct {
-	uow       repositories.UnitOfWork
+	uow       *repositories.UnitOfWork
 	noteRepo  repositories.INoteRepository
 	linkRepo  repositories.ILinkRepository
 	tagRepo   repositories.ITagRepository
@@ -25,7 +27,7 @@ type indexRebuilder struct {
 }
 
 func NewIndexRebuilder(
-	uow repositories.UnitOfWork,
+	uow *repositories.UnitOfWork,
 	noteRepo repositories.INoteRepository,
 	linkRepo repositories.ILinkRepository,
 	tagRepo repositories.ITagRepository,
@@ -36,6 +38,7 @@ func NewIndexRebuilder(
 		noteRepo: noteRepo,
 		linkRepo: linkRepo,
 		tagRepo:  tagRepo,
+		indexRepo: indexRepo,
 	}
 }
 
@@ -46,6 +49,10 @@ func (r *indexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) err
 		return err
 	}
 
+	slog.Debug("Successfully read files from vault", "vaultRoot", vaultRoot, "fileCount", len(files))
+
+	notes, links, tags, noteTags := r.buildDBModels(files)
+
 	dbctx, err := r.uow.Begin()
 	if err != nil {
 		return err
@@ -54,6 +61,39 @@ func (r *indexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) err
 	if err = r.indexRepo.WipeIndex(ctx, dbctx); err != nil {
 		r.uow.Rollback()
 		slog.Debug("Failed to wipe index, rolling back transaction", "error", err)
+		return err
+	}
+
+	if err = r.buildIndex(ctx, dbctx, notes, links, tags, noteTags); err != nil {
+		r.uow.Rollback()
+		slog.Debug("Failed to build index, rolling back transaction", "error", err)
+		return err
+	}
+
+	return nil
+}
+
+func (r *indexRebuilder) buildIndex(
+	ctx context.Context,
+	dbctx persistence.IDbContext,
+	notes []*models.Note,
+	links []*models.Link,
+	tags []*models.Tag,
+	noteTags []*models.NoteTag,
+) error {
+	if err := r.noteRepo.InsertRange(ctx, dbctx, notes); err != nil {
+		return err
+	}
+
+	if err := r.linkRepo.InsertRange(ctx, dbctx, links); err != nil {
+		return err
+	}
+
+	if err := r.tagRepo.InsertRange(ctx, dbctx, tags); err != nil {
+		return err
+	}
+
+	if err := r.tagRepo.InsertNoteTags(ctx, dbctx, noteTags); err != nil {
 		return err
 	}
 
@@ -106,4 +146,28 @@ func (r *indexRebuilder) shouldIndexDirectory(path string) bool {
 		}
 	}
 	return true
+}
+
+func (r *indexRebuilder) buildDBModels(files []*filehandling.File) ([]*models.Note, []*models.Link, []*models.Tag, []*models.NoteTag) {
+	var notes []*models.Note
+	var links []*models.Link
+	tagMap := make(map[string]*models.Tag)
+	var noteTags []*models.NoteTag
+
+	for _, file := range files {
+		note := models.CreateNote(file.Path, file.Title, file.Slug)
+		notes = append(notes, note)
+		for _, t := range models.CreateTags(file.FrontMatter.Tags) {
+			tagMap[t.Name()] = t
+		}
+		noteTags = append(noteTags, models.CreateNoteTags(note.ID(), file.FrontMatter.Tags)...)
+		links = append(links, models.MapToLinkModel(note.ID(), file.ExtractedLinks)...)
+	}
+
+	tags := make([]*models.Tag, 0, len(tagMap))
+	for _, tag := range tagMap {
+		tags = append(tags, tag)
+	}
+
+	return notes, links, tags, noteTags
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
@@ -15,10 +16,10 @@ type initializeCommand struct {
 }
 
 type InitializeHandler struct {
-	idxRebuilder persistence.IIndexRebuilder
+	idxRebuilder services.IIndexRebuilder
 }
 
-func NewInitializeHandler(idxR persistence.IIndexRebuilder) *InitializeHandler {
+func NewInitializeHandler(idxR services.IIndexRebuilder) *InitializeHandler {
 	return &InitializeHandler{idxRebuilder: idxR}
 }
 
