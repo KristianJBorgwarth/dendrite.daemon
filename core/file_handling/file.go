@@ -38,6 +38,12 @@ func ReadFile(path string) (*File, error) {
 		return nil, err
 	}
 
+	if fm == nil {
+		fm = &FrontMatter{
+			Title: strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)),
+		}
+	}
+
 	return &File{
 		Path:        path,
 		Title:       fm.Title,

@@ -6,6 +6,8 @@ import (
 	"io/fs"
 	"log/slog"
 	"path/filepath"
+	"slices"
+	"strings"
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
@@ -15,15 +17,14 @@ type IIndexRebuilder interface {
 	RebuildIndex(ctx context.Context, vaultRoot string) error
 }
 
-type IndexRebuilder struct {
-}
+type IndexRebuilder struct{}
 
 func NewIndexRebuilder() *IndexRebuilder {
 	return &IndexRebuilder{}
 }
 
 func (r *IndexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) error {
-	files, err := r.ReadFiles(vaultRoot)
+	files, err := r.readFiles(vaultRoot)
 	if err != nil {
 		slog.Debug("Failed to read files from vault", "vaultRoot", vaultRoot, "error", err)
 		return err
@@ -68,7 +69,7 @@ func (r *IndexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) err
 }
 
 func (r *IndexRebuilder) InsertNotes(ctx context.Context, tx *sql.Tx, notes []*models.Note) error {
-	noteStmt, err := tx.Prepare(`INSERT INTO note (id, title, slug, path) VALUES (?, ?, ?, ?)`)
+	noteStmt, err := tx.Prepare(`INSERT INTO note (id, title, slug, path, created_at, updated_at) VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))`)
 	if err != nil {
 		return err
 	}
@@ -126,17 +127,28 @@ func (r *IndexRebuilder) InsertNoteTags(ctx context.Context, tx *sql.Tx, noteTag
 	return nil
 }
 
-func (r *IndexRebuilder) ReadFiles(vault string) ([]*filehandling.File, error) {
+func (r *IndexRebuilder) readFiles(vault string) ([]*filehandling.File, error) {
 	var files []*filehandling.File
 
 	err := filepath.WalkDir(vault, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
+		slog.Debug("Processing file during index rebuild", "path", path)
 
-		if d.IsDir() || filepath.Ext(path) != ".md" {
+		if d.IsDir() {
+			if !r.shouldIndexDirectory(path) {
+				slog.Debug("Skipping directory during index rebuild", "path", path)
+				return filepath.SkipDir
+			}
 			return nil
 		}
+
+		if filepath.Ext(path) != ".md" {
+			slog.Debug("Skipping non-markdown file during index rebuild", "path", path)
+			return nil
+		}
+
 		pendingFile, err := filehandling.ReadFile(path)
 		if err != nil {
 			return err
@@ -151,6 +163,16 @@ func (r *IndexRebuilder) ReadFiles(vault string) ([]*filehandling.File, error) {
 	}
 
 	return files, nil
+}
+
+func (r *IndexRebuilder) shouldIndexDirectory(path string) bool {
+	ignoredDirs := []string{".git", ".templates", "temp", "issues"}
+	for part := range strings.SplitSeq(path, string(filepath.Separator)) {
+		if slices.Contains(ignoredDirs, part) {
+			return false
+		}
+	}
+	return true
 }
 
 func (r *IndexRebuilder) buildDBModels(files []*filehandling.File) ([]*models.Note, []*models.Link, []*models.Tag, []*models.NoteTag) {
@@ -178,9 +200,9 @@ func (r *IndexRebuilder) buildDBModels(files []*filehandling.File) ([]*models.No
 }
 
 func (r *IndexRebuilder) wipeIndex(ctx context.Context, tx *sql.Tx) error {
-	cmd := `DELETE FROM notes; 
-	DELETE FROM tags;
-	DELETE FROM note_tags;
+	cmd := `DELETE FROM note; 
+	DELETE FROM tag;
+	DELETE FROM note_tag;
 	DELETE FROM link;`
 
 	_, err := tx.ExecContext(ctx, cmd)
