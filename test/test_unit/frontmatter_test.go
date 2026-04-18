@@ -22,12 +22,13 @@ This is the content of the note.`
 	assert.Equal(t, []string{"test", "note"}, result.Tags)
 }
 
-func TestParseTags_MissingDelimiter_ReturnsError(t *testing.T) {
+func TestParseTags_MissingDelimiter_ReturnsNil(t *testing.T) {
 	input := `title: My Note
 tags: ["test", "note"]
 This is the content of the note.`
 
-	_, err := filehandling.ParseFrontMatter([]byte(input))
+	val, err := filehandling.ParseFrontMatter([]byte(input))
 
-	assert.ErrorContains(t, err, "missing front matter delimiter")
+	assert.NoError(t, err)
+	assert.Nil(t, val)
 }

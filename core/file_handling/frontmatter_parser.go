@@ -2,7 +2,6 @@ package filehandling
 
 import (
 	"bytes"
-	"errors"
 
 	"gopkg.in/yaml.v3"
 )
@@ -12,6 +11,7 @@ type FrontMatter struct {
 	Tags    []string `yaml:"tags"`
 	Created string   `yaml:"created"`
 	Updated string   `yaml:"updated"`
+	Date		string   `yaml:"date"`
 	Author  string   `yaml:"author"`
 }
 
@@ -20,7 +20,7 @@ func ParseFrontMatter(file []byte) (*FrontMatter, error) {
 	if bytes.HasPrefix(content, []byte("---")) {
 		content = bytes.TrimSpace(content[3:])
 	} else {
-		return nil, errors.New("missing front matter delimiter")
+		return nil, nil
 	}
 
 	if idx := bytes.Index(content, []byte("---")); idx != -1 {

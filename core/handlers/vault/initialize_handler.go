@@ -14,10 +14,12 @@ type initializeCommand struct {
 	TemplateDirectory string `json:"templateDirectory"`
 }
 
-type InitializeHandler struct{}
+type InitializeHandler struct {
+	idxRebuilder persistence.IIndexRebuilder
+}
 
-func NewInitializeHandler() *InitializeHandler {
-	return &InitializeHandler{}
+func NewInitializeHandler(idxR persistence.IIndexRebuilder) *InitializeHandler {
+	return &InitializeHandler{idxRebuilder: idxR}
 }
 
 func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -31,6 +33,10 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 
 	err := persistence.InitializeDBContext(store.Config.VaultName())
 	if err != nil {
+		return nil, err
+	}
+
+	if err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath); err != nil {
 		return nil, err
 	}
 
