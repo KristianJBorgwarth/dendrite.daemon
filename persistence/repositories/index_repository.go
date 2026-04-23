@@ -9,6 +9,7 @@ import (
 type IIndexRepository interface {
 	GetBuildFlag(ctx context.Context) (bool, error)
 	WipeIndex(ctx context.Context, dbContext persistence.IDbContext) error
+	SetBuildFlag(ctx context.Context, dbContext persistence.IDbContext, rebuilding bool) error
 }
 
 type indexRepository struct {

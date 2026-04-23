@@ -17,10 +17,11 @@ type initializeCommand struct {
 
 type InitializeHandler struct {
 	idxRebuilder services.IIndexRebuilder
+	noteService  services.INoteService
 }
 
-func NewInitializeHandler(idxR services.IIndexRebuilder) *InitializeHandler {
-	return &InitializeHandler{idxRebuilder: idxR}
+func NewInitializeHandler(idxR services.IIndexRebuilder, nsv services.INoteService) *InitializeHandler {
+	return &InitializeHandler{idxRebuilder: idxR, noteService: nsv}
 }
 
 func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -37,7 +38,19 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
+	noteCount, err := h.noteService.GetNoteCount(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if noteCount > 0 {
+		return nil, nil
+	}
+
 	err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath)
+	if err != nil {
+		return nil, err
+	}
 
 	return nil, nil
 }
