@@ -37,9 +37,7 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
-	if err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath); err != nil {
-		return nil, err
-	}
+	err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath)
 
 	return nil, nil
 }

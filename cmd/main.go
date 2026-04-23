@@ -20,10 +20,12 @@ func main() {
 	server := server.NewServer()
 
 	uow := repositories.NewUnitOfWork();
-	indexRepo := repositories.NewIndexRepository()
+
+	indexRepo := repositories.NewIndexRepository(*persistence.NewReadContext())
 	linkRepo := repositories.NewLinkRepository(*persistence.NewReadContext())
 	tagRepo := repositories.NewTagRepository()
 	noteRepo := repositories.NewNoteRepository(*persistence.NewReadContext())
+
 	tagService := services.NewTagService(tagRepo)
 	linkService := services.NewLinkService(linkRepo)
 	noteService := services.NewNoteService(tagRepo, linkRepo, noteRepo)

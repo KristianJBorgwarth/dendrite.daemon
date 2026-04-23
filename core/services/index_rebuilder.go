@@ -110,7 +110,7 @@ func (r *indexRebuilder) readFiles(vault string) ([]*filehandling.File, error) {
 		slog.Debug("Processing file during index rebuild", "path", path)
 
 		if d.IsDir() {
-			if !r.shouldIndexDirectory(path) {
+			if !r.IsValidDirectory(path) {
 				slog.Debug("Skipping directory during index rebuild", "path", path)
 				return filepath.SkipDir
 			}
@@ -138,7 +138,7 @@ func (r *indexRebuilder) readFiles(vault string) ([]*filehandling.File, error) {
 	return files, nil
 }
 
-func (r *indexRebuilder) shouldIndexDirectory(path string) bool {
+func (r *indexRebuilder) IsValidDirectory(path string) bool {
 	ignoredDirs := []string{".git", ".templates", "temp", "issues"}
 	for part := range strings.SplitSeq(path, string(filepath.Separator)) {
 		if slices.Contains(ignoredDirs, part) {
