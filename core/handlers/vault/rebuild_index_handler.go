@@ -8,9 +8,6 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
-type rebuildIndexCommand struct {
-}
-
 type RebuildIndexHandler struct {
 	idxRebuilder services.IIndexRebuilder
 }
@@ -20,12 +17,6 @@ func NewRebuildIndexHandler(idxR services.IIndexRebuilder) *RebuildIndexHandler 
 }
 
 func (h RebuildIndexHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
-	var cmd rebuildIndexCommand
-
-	if err := json.Unmarshal(raw, &cmd); err != nil {
-		return nil, err
-	}
-
 	err := h.idxRebuilder.RebuildIndex(ctx, store.GetVaultStore().Config.VaultPath())
 	if err != nil {
 		return nil, err
@@ -33,4 +24,3 @@ func (h RebuildIndexHandler) Handle(ctx context.Context, raw json.RawMessage) (a
 
 	return nil, nil
 }
-
