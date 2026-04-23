@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
@@ -44,6 +45,7 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 	}
 
 	if noteCount > 0 {
+		slog.Debug("Vault already initialized, skipping index rebuild")
 		return nil, nil
 	}
 
