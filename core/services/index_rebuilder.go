@@ -34,39 +34,36 @@ func NewIndexRebuilder(
 	indexRepo repositories.IIndexRepository,
 ) *indexRebuilder {
 	return &indexRebuilder{
-		uow:      uow,
-		noteRepo: noteRepo,
-		linkRepo: linkRepo,
-		tagRepo:  tagRepo,
+		uow:       uow,
+		noteRepo:  noteRepo,
+		linkRepo:  linkRepo,
+		tagRepo:   tagRepo,
 		indexRepo: indexRepo,
 	}
 }
 
 func (r *indexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) error {
-	files, err := r.readFiles(vaultRoot)
-	if err != nil {
-		slog.Debug("Failed to read files from vault", "vaultRoot", vaultRoot, "error", err)
-		return err
-	}
-
-	slog.Debug("Successfully read files from vault", "vaultRoot", vaultRoot, "fileCount", len(files))
-
-	notes, links, tags, noteTags := r.buildDBModels(files)
-
 	dbctx, err := r.uow.Begin()
 	if err != nil {
 		return err
 	}
 
+	files, err := r.readFiles(vaultRoot)
+	if err != nil {
+		return err
+	}
+
+	notes, links, tags, noteTags := r.buildDBModels(files)
+
 	if err = r.indexRepo.WipeIndex(ctx, dbctx); err != nil {
-		r.uow.Rollback()
-		slog.Debug("Failed to wipe index, rolling back transaction", "error", err)
 		return err
 	}
 
 	if err = r.buildIndex(ctx, dbctx, notes, links, tags, noteTags); err != nil {
-		r.uow.Rollback()
-		slog.Debug("Failed to build index, rolling back transaction", "error", err)
+		return err
+	}
+
+	if err = r.uow.Commit(); err != nil {
 		return err
 	}
 
