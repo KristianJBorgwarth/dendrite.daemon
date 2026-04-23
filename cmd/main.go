@@ -33,10 +33,13 @@ func main() {
 
 	server.RegisterHandler("vault/init", vault.NewInitializeHandler(idxr, noteService))
 	server.RegisterHandler("vault/rebuild", vault.NewRebuildIndexHandler(idxr))
+
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo))
 	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
+
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler(linkRepo))
+	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
 		slog.Error("server error", "error", err)
