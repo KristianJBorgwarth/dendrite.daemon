@@ -14,14 +14,15 @@ type INoteRepository interface {
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, note []*models.Note) error
 	Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error
 	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
+	GetNoteCount(ctx context.Context) (int, error)
 }
 
 type noteRepository struct {
 	readDBContext persistence.ReadContext
 }
 
-func NewNoteRepository(persistence.ReadContext) INoteRepository {
-	return &noteRepository{}
+func NewNoteRepository(rdb persistence.ReadContext) INoteRepository {
+	return &noteRepository{readDBContext: rdb}
 }
 
 func (r *noteRepository) Insert(ctx context.Context, dbContext persistence.IDbContext, note *models.Note) error {
@@ -81,4 +82,17 @@ func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.No
 	}
 
 	return models.NewNote(id, path, title, slug, createdAt, updatedAt), nil
+}
+
+func (r *noteRepository) GetNoteCount(ctx context.Context) (int, error) {
+	query := `SELECT COUNT(*) FROM note`
+	row := r.readDBContext.QueryRowContext(ctx, query)
+
+	var count int
+	err := row.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

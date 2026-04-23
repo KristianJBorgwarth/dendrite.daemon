@@ -12,6 +12,7 @@ type INoteService interface {
 	CreateNote(ctx context.Context, dbCtx persistence.IDbContext, path, title, slug string) (*models.Note, error)
 	DeleteNoteMetaData(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
 	UpdateNote(ctx context.Context, dbCtx persistence.IDbContext, noteID, path, title, slug string) error
+	GetNoteCount(ctx context.Context) (int, error)
 }
 
 type noteService struct {
@@ -54,4 +55,8 @@ func (s *noteService) DeleteNoteMetaData(ctx context.Context, dbCtx persistence.
 	}
 
 	return nil
+}
+
+func (s *noteService) GetNoteCount(ctx context.Context) (int, error) {
+	return s.noteRepo.GetNoteCount(ctx)
 }

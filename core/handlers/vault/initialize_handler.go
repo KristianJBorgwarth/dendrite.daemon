@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
@@ -17,10 +18,11 @@ type initializeCommand struct {
 
 type InitializeHandler struct {
 	idxRebuilder services.IIndexRebuilder
+	noteService  services.INoteService
 }
 
-func NewInitializeHandler(idxR services.IIndexRebuilder) *InitializeHandler {
-	return &InitializeHandler{idxRebuilder: idxR}
+func NewInitializeHandler(idxR services.IIndexRebuilder, nsv services.INoteService) *InitializeHandler {
+	return &InitializeHandler{idxRebuilder: idxR, noteService: nsv}
 }
 
 func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -37,7 +39,18 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
-	if err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath); err != nil {
+	noteCount, err := h.noteService.GetNoteCount(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	if noteCount > 0 {
+		slog.Debug("Vault already initialized, skipping index rebuild")
+		return nil, nil
+	}
+
+	err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath)
+	if err != nil {
 		return nil, err
 	}
 

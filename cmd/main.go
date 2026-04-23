@@ -20,16 +20,18 @@ func main() {
 	server := server.NewServer()
 
 	uow := repositories.NewUnitOfWork();
-	indexRepo := repositories.NewIndexRepository()
+
+	indexRepo := repositories.NewIndexRepository(*persistence.NewReadContext())
 	linkRepo := repositories.NewLinkRepository(*persistence.NewReadContext())
 	tagRepo := repositories.NewTagRepository()
 	noteRepo := repositories.NewNoteRepository(*persistence.NewReadContext())
+
 	tagService := services.NewTagService(tagRepo)
 	linkService := services.NewLinkService(linkRepo)
 	noteService := services.NewNoteService(tagRepo, linkRepo, noteRepo)
 	idxr := services.NewIndexRebuilder(uow, noteRepo, linkRepo, tagRepo, indexRepo )
 
-	server.RegisterHandler("vault/init", vault.NewInitializeHandler(idxr))
+	server.RegisterHandler("vault/init", vault.NewInitializeHandler(idxr, noteService))
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo))
 	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
