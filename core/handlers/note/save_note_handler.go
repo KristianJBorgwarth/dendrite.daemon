@@ -3,7 +3,6 @@ package note
 import (
 	"context"
 	"encoding/json"
-	"log/slog"
 
 	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
