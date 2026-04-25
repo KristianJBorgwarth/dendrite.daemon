@@ -23,7 +23,7 @@ func main() {
 
 	indexRepo := repositories.NewIndexRepository(*persistence.NewReadContext())
 	linkRepo := repositories.NewLinkRepository(*persistence.NewReadContext())
-	tagRepo := repositories.NewTagRepository()
+	tagRepo := repositories.NewTagRepository(*persistence.NewReadContext())
 	noteRepo := repositories.NewNoteRepository(*persistence.NewReadContext())
 
 	tagService := services.NewTagService(tagRepo)

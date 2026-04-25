@@ -29,5 +29,15 @@ func (h *CompleteTagHandler) Handle(ctx context.Context, raw json.RawMessage) (a
 		return nil, err
 	}
 
-	panic("not implemented")
+	tags, err := h.tagRepo.GetByName(ctx, cmd.Query)
+	if err != nil {
+		return nil, err
+	}
+
+	results := make([]completeTagResult, len(tags))
+	for i, tag := range tags {
+		results[i] = completeTagResult{Name: tag.Name()}
+	}
+
+	return results, nil
 }
