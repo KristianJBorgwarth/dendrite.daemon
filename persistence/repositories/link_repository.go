@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/dtos"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
@@ -14,6 +15,7 @@ type ILinkRepository interface {
 	GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, targetSlug string) ([]*models.Link, error)
 	Search(ctx context.Context, query string) ([]*models.Link, error)
+	GetBacklinks(ctx context.Context, slug string) ([]*dtos.Backlink, error)
 	Delete(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) error
 }
 
@@ -121,6 +123,32 @@ func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Li
 	}
 
 	return links, nil
+}
+
+func (r *linkRepository) GetBacklinks(ctx context.Context, slug string) ([]*dtos.Backlink, error) {
+	query := `
+	SELECT n.id, n.slug, n.title, n.path, l.raw, l.line, l.col
+	FROM link l
+	JOIN note n ON l.from_note_id = n.id
+	WHERE l.target_slug = ?`
+
+	rows, err := r.readDBContext.QueryContext(ctx, query, slug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var backlinks []*dtos.Backlink
+	for rows.Next() {
+		var noteID, noteSlug, noteTitle, notePath, raw string
+		var line, col int
+		if err := rows.Scan(&noteID, &noteSlug, &noteTitle, &notePath, &raw, &line, &col); err != nil {
+			return nil, err
+		}
+		backlinks = append(backlinks, dtos.NewBacklink(noteID, noteTitle, noteSlug, notePath, raw, line, col))
+	}
+
+	return backlinks, nil
 }
 
 func (r *linkRepository) Delete(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) error {
