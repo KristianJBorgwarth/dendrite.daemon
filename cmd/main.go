@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/completion"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/link"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/note"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/vault"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/logging"
@@ -37,6 +38,8 @@ func main() {
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo))
 	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
+
+	server.RegisterHandler("link/getBacklinks", link.NewGetBackLinksHandler(linkRepo))
 
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler(linkRepo))
 	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
