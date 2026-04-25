@@ -17,8 +17,8 @@ import (
 func newCreateNoteHandler() *note.CreateNoteHandler {
 	return note.NewCreateNoteHandler(
 		repositories.NewUnitOfWork(),
-		services.NewTagService(repositories.NewTagRepository()),
-		repositories.NewNoteRepository(*persistence.NewReadContext()),
+		services.NewTagService(repositories.NewTagRepository(persistence.NewReadContext())),
+		repositories.NewNoteRepository(persistence.NewReadContext()),
 	)
 }
 

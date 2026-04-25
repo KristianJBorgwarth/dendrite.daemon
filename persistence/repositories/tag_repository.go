@@ -14,12 +14,15 @@ type ITagRepository interface {
 	InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteTags []*models.NoteTag) error
 	GetByNames(ctx context.Context, dbCtx persistence.IDbContext, names []string) ([]*models.Tag, error)
 	DeleteNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
+	GetByName(ctx context.Context, tagName string) ([]*models.Tag, error)
 }
 
-type tagRepository struct{}
+type tagRepository struct {
+	readDBContext persistence.ReadContext
+}
 
-func NewTagRepository() ITagRepository {
-	return &tagRepository{}
+func NewTagRepository(rdb persistence.ReadContext) ITagRepository {
+	return &tagRepository{readDBContext: rdb}
 }
 
 func (r *tagRepository) Insert(ctx context.Context, dbCtx persistence.IDbContext, tags []*models.Tag) error {
@@ -56,9 +59,9 @@ func (r *tagRepository) InsertRange(ctx context.Context, dbCtx persistence.IDbCo
 			return err
 		}
 	}
-	
+
 	return nil
-}	
+}
 
 func (r *tagRepository) InsertNoteTags(ctx context.Context, dbCtx persistence.IDbContext, noteTags []*models.NoteTag) error {
 	noteTagStmt, err := dbCtx.Prepare(`INSERT INTO note_tag (note_id, tag_id) VALUES (?, ?)`)
@@ -91,6 +94,25 @@ func (r *tagRepository) GetByNames(ctx context.Context, dbCtx persistence.IDbCon
 	query := "SELECT name FROM tag WHERE name IN (" + strings.Join(placeholders, ",") + ")"
 
 	rows, err := dbCtx.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var tags []*models.Tag
+	for rows.Next() {
+		var name string
+		if err := rows.Scan(&name); err != nil {
+			return nil, err
+		}
+		tags = append(tags, models.NewTag(name))
+	}
+
+	return tags, nil
+}
+
+func (r *tagRepository) GetByName(ctx context.Context, tagName string) ([]*models.Tag, error) {
+	rows, err := r.readDBContext.QueryContext(ctx, `SELECT * FROM tag WHERE name LIKE ?`, "%"+tagName+"%")
 	if err != nil {
 		return nil, err
 	}

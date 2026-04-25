@@ -7,8 +7,8 @@ import (
 
 type ReadContext struct{}
 
-func NewReadContext() *ReadContext {
-	return &ReadContext{}
+func NewReadContext() ReadContext {
+	return ReadContext{}
 }
 
 func (r *ReadContext) ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error) {

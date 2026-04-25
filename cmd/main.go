@@ -21,10 +21,10 @@ func main() {
 
 	uow := repositories.NewUnitOfWork();
 
-	indexRepo := repositories.NewIndexRepository(*persistence.NewReadContext())
-	linkRepo := repositories.NewLinkRepository(*persistence.NewReadContext())
-	tagRepo := repositories.NewTagRepository()
-	noteRepo := repositories.NewNoteRepository(*persistence.NewReadContext())
+	indexRepo := repositories.NewIndexRepository(persistence.NewReadContext())
+	linkRepo := repositories.NewLinkRepository(persistence.NewReadContext())
+	tagRepo := repositories.NewTagRepository(persistence.NewReadContext())
+	noteRepo := repositories.NewNoteRepository(persistence.NewReadContext())
 
 	tagService := services.NewTagService(tagRepo)
 	linkService := services.NewLinkService(linkRepo)
@@ -33,10 +33,13 @@ func main() {
 
 	server.RegisterHandler("vault/init", vault.NewInitializeHandler(idxr, noteService))
 	server.RegisterHandler("vault/rebuild", vault.NewRebuildIndexHandler(idxr))
+
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo))
 	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
+
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler(linkRepo))
+	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
 		slog.Error("server error", "error", err)
