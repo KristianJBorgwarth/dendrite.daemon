@@ -21,10 +21,10 @@ func main() {
 
 	uow := repositories.NewUnitOfWork();
 
-	indexRepo := repositories.NewIndexRepository(*persistence.NewReadContext())
-	linkRepo := repositories.NewLinkRepository(*persistence.NewReadContext())
-	tagRepo := repositories.NewTagRepository(*persistence.NewReadContext())
-	noteRepo := repositories.NewNoteRepository(*persistence.NewReadContext())
+	indexRepo := repositories.NewIndexRepository(persistence.NewReadContext())
+	linkRepo := repositories.NewLinkRepository(persistence.NewReadContext())
+	tagRepo := repositories.NewTagRepository(persistence.NewReadContext())
+	noteRepo := repositories.NewNoteRepository(persistence.NewReadContext())
 
 	tagService := services.NewTagService(tagRepo)
 	linkService := services.NewLinkService(linkRepo)
