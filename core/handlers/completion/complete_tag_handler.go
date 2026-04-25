@@ -3,16 +3,13 @@ package completion
 import (
 	"context"
 	"encoding/json"
+	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
 type completeTagCommand struct {
 	Query string `json:"query"`
-}
-
-type completeTagResult struct {
-	Name string `json:"name"`
 }
 
 type CompleteTagHandler struct {
@@ -30,13 +27,14 @@ func (h *CompleteTagHandler) Handle(ctx context.Context, raw json.RawMessage) (a
 	}
 
 	tags, err := h.tagRepo.GetByName(ctx, cmd.Query)
+	slog.Debug("Got tags", "query", cmd.Query, "count", len(tags))
 	if err != nil {
 		return nil, err
 	}
 
-	results := make([]completeTagResult, len(tags))
+	results := make([]string, len(tags))
 	for i, tag := range tags {
-		results[i] = completeTagResult{Name: tag.Name()}
+		results[i] = tag.Name()
 	}
 
 	return results, nil
