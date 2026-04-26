@@ -14,6 +14,7 @@ type INoteRepository interface {
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, note []*models.Note) error
 	Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error
 	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
+	GetByPath(ctx context.Context, path string) (*models.Note, error)
 	GetNoteCount(ctx context.Context) (int, error)
 }
 
@@ -81,6 +82,22 @@ func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.No
 		return nil, err
 	}
 
+	return models.NewNote(id, path, title, slug, createdAt, updatedAt), nil
+}
+
+func (r *noteRepository) GetByPath(ctx context.Context, path string) (*models.Note, error) {
+	query := `SELECT id, title, path, slug, created_at, updated_at FROM note WHERE path = ?`
+	row := r.readDBContext.QueryRowContext(ctx, query, path)
+
+	var id, title, slug, createdAt, updatedAt string
+	err := row.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	
 	return models.NewNote(id, path, title, slug, createdAt, updatedAt), nil
 }
 
