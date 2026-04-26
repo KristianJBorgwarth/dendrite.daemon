@@ -117,7 +117,7 @@ func (r *noteRepository) GetNoteCount(ctx context.Context) (int, error) {
 
 func (r *noteRepository) GetByTag(ctx context.Context, tag string) ([]*models.Note, error) {
 	rows, err := r.readDBContext.QueryContext(ctx, `
-	SELECT n.id, n.title, n.path, n.slug, n.created_at, n.updated_at
+	SELECT DISTINCT n.id, n.title, n.path, n.slug, n.created_at, n.updated_at
 	FROM note n
 	JOIN note_tag nt ON n.id = nt.note_id
 	JOIN tag t ON t.name = nt.tag_id
