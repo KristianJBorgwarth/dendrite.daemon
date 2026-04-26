@@ -1,6 +1,6 @@
 package dtos
 
-type Backlink struct {
+type BacklinkDto struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
 	Slug  string `json:"slug"`
@@ -10,8 +10,8 @@ type Backlink struct {
 	Col   int    `json:"col"`
 }
 
-func NewBacklink(id, title, slug, path, raw string, col, line int) *Backlink {
-	return &Backlink{
+func NewBacklink(id, title, slug, path, raw string, col, line int) *BacklinkDto {
+	return &BacklinkDto{
 		ID:    id,
 		Title: title,
 		Slug:  slug,

@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/dtos"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 type getNotesByTagCommand struct {
@@ -29,5 +30,10 @@ func (h *GetNotesByTagHandler) Handle(ctx context.Context, raw json.RawMessage) 
 		return nil, err
 	}
 
-	return notes, nil
+	noteDtos := make([]*dtos.NoteDto, len(notes))
+	for i, note := range notes {
+		noteDtos[i] = dtos.NewNoteDto(note)
+	}
+
+	return noteDtos, nil
 }

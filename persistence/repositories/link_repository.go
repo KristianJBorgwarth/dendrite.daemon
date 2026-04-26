@@ -15,7 +15,7 @@ type ILinkRepository interface {
 	GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, targetSlug string) ([]*models.Link, error)
 	Search(ctx context.Context, query string) ([]*models.Link, error)
-	GetBacklinks(ctx context.Context, slug string) ([]*dtos.Backlink, error)
+	GetBacklinks(ctx context.Context, slug string) ([]*dtos.BacklinkDto, error)
 	Delete(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) error
 }
 
@@ -125,7 +125,7 @@ func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Li
 	return links, nil
 }
 
-func (r *linkRepository) GetBacklinks(ctx context.Context, slug string) ([]*dtos.Backlink, error) {
+func (r *linkRepository) GetBacklinks(ctx context.Context, slug string) ([]*dtos.BacklinkDto, error) {
 	query := `
 	SELECT n.id, n.slug, n.title, n.path, l.raw, l.line, l.col
 	FROM link l
@@ -138,7 +138,7 @@ func (r *linkRepository) GetBacklinks(ctx context.Context, slug string) ([]*dtos
 	}
 	defer rows.Close()
 
-	backlinks := make([]*dtos.Backlink, 0)
+	backlinks := make([]*dtos.BacklinkDto, 0)
 	for rows.Next() {
 		var noteID, noteSlug, noteTitle, notePath, raw string
 		var line, col int
