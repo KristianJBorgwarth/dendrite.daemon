@@ -16,6 +16,7 @@ type INoteRepository interface {
 	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
 	GetByPath(ctx context.Context, path string) (*models.Note, error)
 	GetByTag(ctx context.Context, tag string) ([]*models.Note, error)
+	GetAll(ctx context.Context, skip, top int) ([]*models.Note, error)
 	GetNoteCount(ctx context.Context) (int, error)
 }
 
@@ -122,6 +123,29 @@ func (r *noteRepository) GetByTag(ctx context.Context, tag string) ([]*models.No
 	JOIN note_tag nt ON n.id = nt.note_id
 	JOIN tag t ON t.name = nt.tag_id
 	WHERE t.name LIKE ?`, "%"+tag+"%")
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	notes := make([]*models.Note, 0)
+	for rows.Next() {
+		var id, title, path, slug, createdAt, updatedAt string
+		if err := rows.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		notes = append(notes, models.NewNote(id, path, title, slug, createdAt, updatedAt))
+	}
+
+	return notes, nil
+}
+
+func (r *noteRepository) GetAll(ctx context.Context, skip, top int) ([]*models.Note, error) {
+	rows, err := r.readDBContext.QueryContext(ctx, `
+	SELECT id, title, path, slug, created_at, updated_at
+	FROM note
+	ORDER BY created_at DESC
+	LIMIT ? OFFSET ?`, top, skip)
 	if err != nil {
 		return nil, err
 	}
