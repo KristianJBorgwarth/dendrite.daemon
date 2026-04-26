@@ -38,6 +38,7 @@ func main() {
 	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
 	server.RegisterHandler("note/backlinks", note.NewGetBackLinksHandler(linkRepo, noteRepo))
+	server.RegisterHandler("note/search_by_tag", note.NewGetNotesByTagHandler(noteRepo))
 
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler(linkRepo))
 	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
