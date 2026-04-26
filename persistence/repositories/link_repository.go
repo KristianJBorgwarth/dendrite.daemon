@@ -138,7 +138,7 @@ func (r *linkRepository) GetBacklinks(ctx context.Context, slug string) ([]*dtos
 	}
 	defer rows.Close()
 
-	var backlinks []*dtos.Backlink
+	backlinks := make([]*dtos.Backlink, 0)
 	for rows.Next() {
 		var noteID, noteSlug, noteTitle, notePath, raw string
 		var line, col int

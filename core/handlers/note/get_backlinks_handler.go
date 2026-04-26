@@ -1,10 +1,9 @@
-package link
+package note
 
 import (
 	"context"
 	"encoding/json"
 
-	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
@@ -14,10 +13,11 @@ type getBacklinksCommand struct {
 
 type GetBackLinksHandler struct {
 	linkRepo repositories.ILinkRepository
+	noteRepo repositories.INoteRepository
 }
 
-func NewGetBackLinksHandler(lr repositories.ILinkRepository) *GetBackLinksHandler {
-	return &GetBackLinksHandler{linkRepo: lr}
+func NewGetBackLinksHandler(lr repositories.ILinkRepository, nr repositories.INoteRepository) *GetBackLinksHandler {
+	return &GetBackLinksHandler{linkRepo: lr, noteRepo: nr}
 }
 
 func (h *GetBackLinksHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -26,9 +26,12 @@ func (h *GetBackLinksHandler) Handle(ctx context.Context, raw json.RawMessage) (
 		return nil, err
 	}
 
-	slug := filehandling.Slugify(cmd.Path)
+	note, err := h.noteRepo.GetByPath(ctx, cmd.Path)
+	if err != nil {
+		return nil, err
+	}
 
-	links, err := h.linkRepo.GetBacklinks(ctx, slug)
+	links, err := h.linkRepo.GetBacklinks(ctx, note.Slug())
 	if err != nil {
 		return nil, err
 	}
