@@ -14,7 +14,6 @@ type ILinkRepository interface {
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, links []*models.Link) error
 	GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, targetSlug string) ([]*models.Link, error)
-	Search(ctx context.Context, query string) ([]*models.Link, error)
 	GetBacklinks(ctx context.Context, slug string) ([]*dtos.BacklinkDto, error)
 	Delete(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) error
 }
@@ -87,26 +86,6 @@ func (r *linkRepository) GetByNoteID(ctx context.Context, dbContext persistence.
 
 func (r *linkRepository) GetBySlug(ctx context.Context, dbContext persistence.IDbContext, targetSlug string) ([]*models.Link, error) {
 	rows, err := dbContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE target_slug = ?`, targetSlug)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var links []*models.Link
-	for rows.Next() {
-		var id, fromNoteID, targetSlug, raw, display string
-		var line, col int
-		if err := rows.Scan(&id, &fromNoteID, &targetSlug, &raw, &display, &line, &col); err != nil {
-			return nil, err
-		}
-		links = append(links, models.NewLink(id, fromNoteID, targetSlug, raw, display, line, col))
-	}
-
-	return links, nil
-}
-
-func (r *linkRepository) Search(ctx context.Context, query string) ([]*models.Link, error) {
-	rows, err := r.readDBContext.QueryContext(ctx, `SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE raw LIKE ?`, "%"+query+"%")
 	if err != nil {
 		return nil, err
 	}
