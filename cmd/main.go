@@ -42,6 +42,7 @@ func main() {
 
 	server.RegisterHandler("completion/link", completion.NewCompleteLinkHandler(linkRepo))
 	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
+	server.RegisterHandler("completion/slug", completion.NewCompleteSlugHandler(noteRepo))
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
 		slog.Error("server error", "error", err)

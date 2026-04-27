@@ -13,6 +13,7 @@ type INoteRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, note *models.Note) error
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, note []*models.Note) error
 	Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error
+	Search(ctx context.Context, query string) ([]*models.Note, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
 	GetByPath(ctx context.Context, path string) (*models.Note, error)
 	GetByTag(ctx context.Context, tag string) ([]*models.Note, error)
@@ -146,6 +147,29 @@ func (r *noteRepository) GetAll(ctx context.Context, skip, top int) ([]*models.N
 	FROM note
 	ORDER BY created_at DESC
 	LIMIT ? OFFSET ?`, top, skip)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	notes := make([]*models.Note, 0)
+	for rows.Next() {
+		var id, title, path, slug, createdAt, updatedAt string
+		if err := rows.Scan(&id, &title, &path, &slug, &createdAt, &updatedAt); err != nil {
+			return nil, err
+		}
+		notes = append(notes, models.NewNote(id, path, title, slug, createdAt, updatedAt))
+	}
+
+	return notes, nil
+}
+
+func (r *noteRepository) Search(ctx context.Context, query string) ([]*models.Note, error) {
+	rows, err := r.readDBContext.QueryContext(ctx, `
+	SELECT id, title, path, slug, created_at, updated_at
+	FROM note
+	WHERE title LIKE ? OR path LIKE ? OR slug LIKE ?
+	ORDER BY created_at DESC`, "%"+query+"%", "%"+query+"%", "%"+query+"%")
 	if err != nil {
 		return nil, err
 	}
