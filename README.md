@@ -1,1 +1,3 @@
-For documenation for dendrite.daemon please have a [dendrite docs](look at https://kristianjborgwarth.github.io/dendrite.docs/)
+## Documentation
+
+See the [Dendrite docs](https://kristianjborgwarth.github.io/dendrite.docs/) for protocol reference and usage.
