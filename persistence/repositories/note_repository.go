@@ -13,6 +13,7 @@ type INoteRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, note *models.Note) error
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, note []*models.Note) error
 	Update(ctx context.Context, dbContext persistence.IDbContext, noteID, path, title, slug string) error
+	Delete(ctx context.Context, dbContext persistence.IDbContext, noteID string) error
 	Search(ctx context.Context, query string) ([]*models.Note, error)
 	GetBySlug(ctx context.Context, slug string) (*models.Note, error)
 	GetByPath(ctx context.Context, path string) (*models.Note, error)
@@ -68,6 +69,12 @@ func (r *noteRepository) Update(ctx context.Context, dbContext persistence.IDbCo
 		return err
 	}
 	return nil
+}
+
+func (r *noteRepository) Delete(ctx context.Context, dbContext persistence.IDbContext, noteID string) error {
+	query := `DELETE FROM note WHERE id= ?`
+	_, err := dbContext.ExecContext(ctx, query, noteID)
+	return err
 }
 
 func (r *noteRepository) GetBySlug(ctx context.Context, slug string) (*models.Note, error) {

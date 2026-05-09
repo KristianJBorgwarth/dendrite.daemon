@@ -36,6 +36,7 @@ func main() {
 
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo))
 	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
+	server.RegisterHandler("note/delete", note.NewDeleteNoteHandler(uow, tagService, noteService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
 	server.RegisterHandler("note/backlinks", note.NewGetBackLinksHandler(linkRepo, noteRepo))
 	server.RegisterHandler("note/search_by_tag", note.NewGetNotesByTagHandler(noteRepo))
