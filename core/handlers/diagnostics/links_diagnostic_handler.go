@@ -46,8 +46,7 @@ func (h *LinkDiagnosticHandler) Handle(ctx context.Context, raw json.RawMessage)
 }
 
 func mapToDiagnosticResult(note *models.Note, links []*models.Link) []*dtos.LinkDiagnosticDto {
-	var diagnostics []*dtos.LinkDiagnosticDto
-
+	diagnostics := make([]*dtos.LinkDiagnosticDto, 0, len(links))
 	for _, link := range links {
 		diagnostics = append(diagnostics, &dtos.LinkDiagnosticDto{
 			NoteID:   link.ID(),
