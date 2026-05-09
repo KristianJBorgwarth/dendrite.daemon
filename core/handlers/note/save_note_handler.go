@@ -4,9 +4,10 @@ import (
 	"context"
 	"encoding/json"
 
-	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
 type saveNoteCommand struct {
@@ -38,7 +39,9 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 		return nil, err
 	}
 
-	file, err := filehandling.ReadFile(cmd.Path)
+	vaultRoot := store.GetVaultStore().Config.VaultPath()
+
+	file, err := filehandling.ReadFile(vaultRoot, cmd.Path)
 	if err != nil {
 		return nil, err
 	}

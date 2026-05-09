@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS note (
     id TEXT PRIMARY KEY,
-    path TEXT UNIQUE,
+    path TEXT UNIQUE NOT NULL,
     title TEXT,
     slug TEXT UNIQUE NOT NULL,
     created_at TEXT NOT NULL,

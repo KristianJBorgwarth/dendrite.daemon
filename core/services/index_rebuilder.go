@@ -119,7 +119,7 @@ func (r *indexRebuilder) readFiles(vault string) ([]*filehandling.File, error) {
 			return nil
 		}
 
-		pendingFile, err := filehandling.ReadFile(path)
+		pendingFile, err := filehandling.ReadFile(vault, path)
 		if err != nil {
 			return err
 		}

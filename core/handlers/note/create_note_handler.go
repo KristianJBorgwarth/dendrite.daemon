@@ -39,12 +39,12 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	template, err := filehandling.NewTemplate(cmd.TemplateName, cmd.Title)
+	template, err := filehandling.NewTemplate(cmd.TemplateName, cmd.Title, cmd.Directory)
 	if err != nil {
 		return nil, err
 	}
 
-	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, template.Slug+".md")
+	notePath := filepath.Join(store.GetVaultStore().Config.VaultPath(), cmd.Directory, template.Filename)
 
 	dbCtx, err := h.uow.Begin()
 	if err != nil {
@@ -52,6 +52,15 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 	}
 
 	defer h.uow.Rollback()
+
+	existingNote, err := h.noteRepo.GetBySlug(ctx, template.Slug)
+	if err != nil {
+		return nil, err
+	}
+
+	if existingNote != nil {
+		return notePath, nil
+	}
 
 	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, template.FrontMatter.Tags)
 	if err != nil {

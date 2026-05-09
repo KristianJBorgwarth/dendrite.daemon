@@ -25,7 +25,7 @@ type ExtractedLink struct {
 	Col        int
 }
 
-func ReadFile(path string) (*File, error) {
+func ReadFile(vaultRoot, path string) (*File, error) {
 	body, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -47,12 +47,13 @@ func ReadFile(path string) (*File, error) {
 	return &File{
 		Path:        path,
 		Title:       fm.Title,
-		Slug:        strings.TrimSuffix(filepath.Base(path), filepath.Ext(path)),
+		Slug:        SlugRelative(vaultRoot, path),
 		FrontMatter: *fm,
 		Content:     strings.Split(string(body), "\n"),
 		ExtractedLinks:       ExtractLinks(body),
 	}, nil
 }
+
 
 var linkRegex = regexp.MustCompile(`\[\[([^\]|]+)(?:\|([^\]]+))?\]\]`)
 
