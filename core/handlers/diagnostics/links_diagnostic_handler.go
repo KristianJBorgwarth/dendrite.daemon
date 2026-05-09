@@ -37,6 +37,10 @@ func (h *LinkDiagnosticHandler) Handle(ctx context.Context, raw json.RawMessage)
 		return nil, err
 	}
 
+	if note == nil {
+		return make([]*dtos.LinkDiagnosticDto, 0), nil
+	}
+
 	brokenLinks, err := h.linkRepository.GetBrokenLinks(ctx, note.ID())
 	if err != nil {
 		return nil, err
