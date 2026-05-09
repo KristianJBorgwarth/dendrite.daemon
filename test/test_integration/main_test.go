@@ -30,7 +30,15 @@ func NewDBFixture() *DBFixture {
 		panic(err)
 	}
 
-	dbPath := filepath.Join(os.TempDir(), ".index", "index.db")
+	xdg := os.Getenv("XDG_DATA_HOME")
+	if xdg == "" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			panic(err)
+		}
+		xdg = filepath.Join(home, ".local", "share")
+	}
+	dbPath := filepath.Join(xdg, "dendrite", vaultPath, "index.db")
 
 	dbContext := persistence.GetDBContext()
 

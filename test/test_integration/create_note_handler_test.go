@@ -79,7 +79,7 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 	assert.Equal(t, notePath, result)
 
 	var noteCount int
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "templated-note").Scan(&noteCount))
+	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "subdir/templated-note").Scan(&noteCount))
 	assert.Equal(t, 1, noteCount)
 
 	rows, err := Fixture.DB.Query(`SELECT name FROM tag WHERE name IN ('go', 'testing')`)
@@ -98,7 +98,7 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 	assert.NoError(t, statErr)
 }
 
-func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
+func TestCreateNoteHandler_DuplicateSlug_ReturnsExistingPath(t *testing.T) {
 	// Arrange
 	handler := newCreateNoteHandler()
 
@@ -107,29 +107,22 @@ func TestCreateNoteHandler_DuplicateSlug_Upserts(t *testing.T) {
 	require.NoError(t, os.MkdirAll(filepath.Join(vaultPath, subDir), 0o755))
 	defer os.RemoveAll(filepath.Join(vaultPath, subDir))
 
-	params1, _ := json.Marshal(map[string]any{"title": "Dup Note", "templateName": "", "directory": subDir})
-	_, err := handler.Handle(Fixture.TestContext, params1)
+	params, _ := json.Marshal(map[string]any{"title": "Dup Note", "templateName": "", "directory": subDir})
+	_, err := handler.Handle(Fixture.TestContext, params)
 	require.NoError(t, err)
 
-	subDir2 := "dup-dir-moved"
-	require.NoError(t, os.MkdirAll(filepath.Join(vaultPath, subDir2), 0o755))
-	defer os.RemoveAll(filepath.Join(vaultPath, subDir2))
-	params2, _ := json.Marshal(map[string]any{"title": "Dup Note", "templateName": "", "directory": subDir2})
-
-	// Act
-	_, err = handler.Handle(Fixture.TestContext, params2)
+	// Act — same title and directory produces the same slug, handler returns early
+	result, err := handler.Handle(Fixture.TestContext, params)
 
 	// Assert
 	require.NoError(t, err)
 
 	var count int
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "dup-note").Scan(&count))
+	require.NoError(t, Fixture.DB.QueryRow(`SELECT COUNT(*) FROM note WHERE slug = ?`, "dup-dir/dup-note").Scan(&count))
 	assert.Equal(t, 1, count)
 
-	expectedPath := filepath.Join(vaultPath, subDir2, "dup-note.md")
-	var path string
-	require.NoError(t, Fixture.DB.QueryRow(`SELECT path FROM note WHERE slug = ?`, "dup-note").Scan(&path))
-	assert.Equal(t, expectedPath, path)
+	expectedPath := filepath.Join(vaultPath, subDir, "dup-note.md")
+	assert.Equal(t, expectedPath, result)
 }
 
 func TestCreateNoteHandler_InvalidJSON_ReturnsError(t *testing.T) {

@@ -2,6 +2,8 @@ package filehandling
 
 import (
 	"bytes"
+	"path/filepath"
+	"strings"
 )
 
 func Slugify(s string) string {
@@ -16,4 +18,10 @@ func Slugify(s string) string {
 		}
 	}
 	return slug.String()
+}
+
+func SlugRelative(base, path string) string {
+	rel := strings.TrimPrefix(path, base+string(filepath.Separator))
+	rel = strings.TrimSuffix(rel, filepath.Ext(rel))
+	return rel
 }

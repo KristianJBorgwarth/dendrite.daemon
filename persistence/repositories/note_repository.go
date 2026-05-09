@@ -33,9 +33,7 @@ func (r *noteRepository) Insert(ctx context.Context, dbContext persistence.IDbCo
 	query := `
 	INSERT INTO note (id, title, path, slug, created_at, updated_at)
 	VALUES (?, ?, ?, ?, datetime('now'), datetime('now'))
-	ON CONFLICT (slug) DO UPDATE
-	SET title = EXCLUDED.title,
-	    path = EXCLUDED.path;
+	ON CONFLICT DO NOTHING;
 	`
 	_, err := dbContext.ExecContext(ctx, query, note.ID(), note.Title(), note.Path(), note.Slug())
 	return err
