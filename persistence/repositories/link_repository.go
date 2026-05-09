@@ -12,10 +12,11 @@ import (
 type ILinkRepository interface {
 	Insert(ctx context.Context, dbContext persistence.IDbContext, links []*models.Link) error
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, links []*models.Link) error
-	GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error)
+	GetByNoteID(ctx context.Context, fromNoteID string) ([]*models.Link, error)
 	GetBySlug(ctx context.Context, dbContext persistence.IDbContext, targetSlug string) ([]*models.Link, error)
 	GetBacklinks(ctx context.Context, slug string) ([]*dtos.BacklinkDto, error)
 	Delete(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) error
+	GetBrokenLinks(ctx context.Context, fromNoteID string) ([]*models.Link, error)
 }
 
 type linkRepository struct {
@@ -64,8 +65,8 @@ func (r *linkRepository) InsertRange(ctx context.Context, dbContext persistence.
 	return nil
 }
 
-func (r *linkRepository) GetByNoteID(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) ([]*models.Link, error) {
-	rows, err := dbContext.QueryContext(ctx, "SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE from_note_id = ?", fromNoteID)
+func (r *linkRepository) GetByNoteID(ctx context.Context, fromNoteID string) ([]*models.Link, error) {
+	rows, err := r.readDBContext.QueryContext(ctx, "SELECT id, from_note_id, target_slug, raw, display, line, col FROM link WHERE from_note_id = ?", fromNoteID)
 	if err != nil {
 		return nil, err
 	}
@@ -133,4 +134,30 @@ func (r *linkRepository) GetBacklinks(ctx context.Context, slug string) ([]*dtos
 func (r *linkRepository) Delete(ctx context.Context, dbContext persistence.IDbContext, fromNoteID string) error {
 	_, err := dbContext.ExecContext(ctx, "DELETE FROM link WHERE from_note_id = ?", fromNoteID)
 	return err
+}
+
+func (r *linkRepository) GetBrokenLinks(ctx context.Context, fromNoteID string) ([]*models.Link, error) {
+	query := `
+	SELECT l.id, l.from_note_id, l.target_slug, l.raw, l.display, l.line, l.col
+	FROM link l
+	LEFT JOIN note n ON l.target_slug = n.slug
+	WHERE l.from_note_id = ? AND n.id IS NULL`
+
+	rows, err := r.readDBContext.QueryContext(ctx, query, fromNoteID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	
+	var brokenLinks []*models.Link
+	for rows.Next() {
+		var id, rowFromNoteID, targetSlug, raw, display string
+		var line, col int
+		if err := rows.Scan(&id, &rowFromNoteID, &targetSlug, &raw, &display, &line, &col); err != nil {
+			return nil, err
+		}
+		brokenLinks = append(brokenLinks, models.NewLink(id, fromNoteID, targetSlug, raw, display, line, col))
+	}
+
+	return brokenLinks, nil
 }
