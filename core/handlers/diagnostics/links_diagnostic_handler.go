@@ -9,24 +9,24 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
-type diagnoseNoteCommand struct {
+type LinkDiagnosticCommand struct {
 	Path string `json:"path"`
 }
 
-type DiagnoseNoteHandler struct {
+type LinkDiagnosticHandler struct {
 	noteRepository repositories.INoteRepository
 	linkRepository repositories.ILinkRepository
 }
 
-func NewDiagnoseNoteHandler(
+func NewLinkDiagnosticHandler(
 	noteRepository repositories.INoteRepository,
 	linkRepository repositories.ILinkRepository,
-) *DiagnoseNoteHandler {
-	return &DiagnoseNoteHandler{noteRepository, linkRepository}
+) *LinkDiagnosticHandler {
+	return &LinkDiagnosticHandler{noteRepository, linkRepository}
 }
 
-func (h *DiagnoseNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
-	var cmd diagnoseNoteCommand
+func (h *LinkDiagnosticHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
+	var cmd LinkDiagnosticCommand
 
 	if err := json.Unmarshal(raw, &cmd); err != nil {
 		return nil, err

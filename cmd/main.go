@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/completion"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/diagnostics"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/note"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/handlers/vault"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/logging"
@@ -43,6 +44,8 @@ func main() {
 
 	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
 	server.RegisterHandler("completion/slug", completion.NewCompleteSlugHandler(noteRepo))
+
+	server.RegisterHandler("diagnostics/links", diagnostics.NewLinkDiagnosticHandler(noteRepo, linkRepo))
 
 	if err := server.Run(os.Stdin, os.Stdout); err != nil {
 		slog.Error("server error", "error", err)
