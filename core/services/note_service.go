@@ -11,6 +11,8 @@ import (
 type INoteService interface {
 	CreateNote(ctx context.Context, dbCtx persistence.IDbContext, path, title, slug string) (*models.Note, error)
 	DeleteNoteMetaData(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error
+	DeleteNote(ctx context.Context, dbCtx persistence.IDbContext, path string) error
+	GetByPath(ctx context.Context, dbCtx persistence.IDbContext, path string) (*models.Note, error)
 	UpdateNote(ctx context.Context, dbCtx persistence.IDbContext, noteID, path, title, slug string) error
 	GetNoteCount(ctx context.Context) (int, error)
 }
@@ -57,6 +59,22 @@ func (s *noteService) DeleteNoteMetaData(ctx context.Context, dbCtx persistence.
 	return nil
 }
 
+func (s *noteService) DeleteNote(ctx context.Context, dbCtx persistence.IDbContext, noteID string) error {
+	if err := s.DeleteNoteMetaData(ctx, dbCtx, noteID); err != nil {
+		return err
+	}
+	
+	if err := s.noteRepo.Delete(ctx, dbCtx, noteID); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (s *noteService) GetNoteCount(ctx context.Context) (int, error) {
 	return s.noteRepo.GetNoteCount(ctx)
+}
+
+func (s *noteService) GetByPath(ctx context.Context, dbCtx persistence.IDbContext, path string) (*models.Note, error) {
+	return s.noteRepo.GetByPath(ctx,path)
 }
