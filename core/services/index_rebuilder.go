@@ -136,7 +136,7 @@ func (r *indexRebuilder) readFiles(vault string) ([]*filehandling.File, error) {
 }
 
 func (r *indexRebuilder) IsValidDirectory(path string) bool {
-	ignoredDirs := []string{".git", ".templates", "temp", "issues"}
+	ignoredDirs := []string{".git", ".templates", "temp"}
 	for part := range strings.SplitSeq(path, string(filepath.Separator)) {
 		if slices.Contains(ignoredDirs, part) {
 			return false
