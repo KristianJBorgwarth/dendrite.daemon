@@ -1,6 +1,6 @@
 ## dendrite.daemon
 
-The core component of [Dendrite](https://kristianjborgwarth.github.io/dendrite.docs/). A Go server that manages the index for a local markdown vault and exposes it over JSON-RPC 2.0.
+The index manager for [Dendrite](https://kristianjborgwarth.github.io/dendrite.docs/).
 
 ## Installation
 
