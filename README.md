@@ -1,6 +1,6 @@
 ## dendrite.daemon
 
-The index manager for [Dendrite](https://kristianjborgwarth.github.io/dendrite.docs/).
+Full documentation here: [Dendrite](https://kristianjborgwarth.github.io/dendrite.docs/).
 
 ## Installation
 
