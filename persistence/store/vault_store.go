@@ -12,11 +12,23 @@ type VaultStore struct {
 
 var vaultStore *VaultStore
 
-func NewVaultStore(vaultName, vaultPath, templateDir string) *VaultStore {
+func NewVaultStore(
+	vaultName,
+	vaultPath,
+	templateDir string,
+	exludeIndexFiles []string,
+	overrideDefaultIgnores bool,
+) *VaultStore {
 	if vaultStore != nil {
 		return vaultStore
 	}
-	vaultStore = &VaultStore{Config: persistenceconfig.NewVaultConfiguration(vaultName, vaultPath, templateDir)}
+	vaultStore = &VaultStore{Config: persistenceconfig.NewVaultConfiguration(
+		vaultName,
+		vaultPath,
+		templateDir,
+		exludeIndexFiles,
+		overrideDefaultIgnores,
+	)}
 	return vaultStore
 }
 
@@ -44,3 +56,6 @@ func (vs *VaultStore) fileTypeCheck(templateName string) string {
 	return templateName
 }
 
+func (vs *VaultStore) GetExcludeIndexFiles() []string {
+	return vs.Config.GetExcludeIndexFiles()
+}

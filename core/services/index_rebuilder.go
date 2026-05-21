@@ -8,10 +8,11 @@ import (
 	"slices"
 	"strings"
 
-	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
+	"github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
+	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
 type IIndexRebuilder interface {
@@ -136,7 +137,7 @@ func (r *indexRebuilder) readFiles(vault string) ([]*filehandling.File, error) {
 }
 
 func (r *indexRebuilder) IsValidDirectory(path string) bool {
-	ignoredDirs := []string{".git", ".templates", "temp"}
+	ignoredDirs := store.GetVaultStore().GetExcludeIndexFiles()
 	for part := range strings.SplitSeq(path, string(filepath.Separator)) {
 		if slices.Contains(ignoredDirs, part) {
 			return false
