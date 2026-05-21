@@ -11,9 +11,11 @@ import (
 )
 
 type initializeCommand struct {
-	VaultName         string `json:"vaultName"`
-	VaultPath         string `json:"vaultPath"`
-	TemplateDirectory string `json:"templateDirectory"`
+	VaultName              string   `json:"vaultName"`
+	VaultPath              string   `json:"vaultPath"`
+	TemplateDirectory      string   `json:"templateDirectory"`
+	ExcludeIndexFiles      []string `json:"excludeIndexFiles"`
+	OverrideDefaultIgnores bool     `json:"overrideDefaultIgnores"`
 }
 
 type InitializeHandler struct {
@@ -32,7 +34,12 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, err
 	}
 
-	store := store.NewVaultStore(cmd.VaultName, cmd.VaultPath, cmd.TemplateDirectory)
+	store := store.NewVaultStore(
+		cmd.VaultName, 
+		cmd.VaultPath, 
+		cmd.TemplateDirectory, 
+		cmd.ExcludeIndexFiles,
+		cmd.OverrideDefaultIgnores)
 
 	err := persistence.InitializeDBContext(store.Config.VaultName())
 	if err != nil {
