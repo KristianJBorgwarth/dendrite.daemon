@@ -1,50 +1,61 @@
 package persistenceconfig
 
-type VaultConfiguration struct {
-	name                   string
-	path                   string
-	templateDirectory      string
-	exludeIndexFiles       []string
-	defaultExcludes        []string
+type DailyNotes struct {
+	dir            string
+	filenameFormat string
+	templateName   string
+}
+
+func NewDailyNotes(dir, filenameFormat, templateName string) DailyNotes {
+	return DailyNotes{
+		dir:            dir,
+		filenameFormat: filenameFormat,
+		templateName:   templateName,
+	}
+}
+
+type VaultConfig struct {
+	vaultName              string
+	vaultPath              string
+	templatesDir           string
+	excludeIndexFiles      []string
 	overrideDefaultIgnores bool
+	dailyNotes             DailyNotes
 }
 
 func NewVaultConfiguration(
 	vaultName,
 	vaultPath,
-	templateDirectory string,
+	templatesDir string,
 	excludeIndexFiles []string,
 	overrideDefaultIgnores bool,
-) *VaultConfiguration {
-	return &VaultConfiguration{
-		name:              vaultName,
-		path:              vaultPath,
-		templateDirectory: templateDirectory,
-		exludeIndexFiles:  excludeIndexFiles,
-		defaultExcludes:   []string{".git", ".templates"},
+	dailyNotes DailyNotes,
+) *VaultConfig {
+	return &VaultConfig{
+		vaultName:    vaultName,
+		vaultPath:    vaultPath,
+		templatesDir: templatesDir,
+		dailyNotes:   dailyNotes,
 	}
 }
 
-func (vc *VaultConfiguration) VaultName() string {
-	return vc.name
+func (vc *VaultConfig) VaultName() string {
+	return vc.vaultName
 }
 
-func (vc *VaultConfiguration) VaultPath() string {
-	return vc.path
+func (vc *VaultConfig) VaultPath() string {
+	return vc.vaultPath
 }
 
-func (vc *VaultConfiguration) TemplateDirectory() string {
-	return vc.templateDirectory
+func (vc *VaultConfig) TemplateDirectory() string {
+	return vc.templatesDir
 }
 
-func (vc *VaultConfiguration) ExcludeIndexFiles() []string {
-	return vc.exludeIndexFiles
-}
-
-func (vc *VaultConfiguration) GetExcludeIndexFiles() []string {
-	defaultIgnores := []string{".git", ".templates"}
+func (vc *VaultConfig) ExcludeIndexFiles() []string {
+	defaultIgnores := []string{"index.md", "index"}
 	if vc.overrideDefaultIgnores {
-		return vc.exludeIndexFiles
+		return vc.excludeIndexFiles
 	}
-	return append(defaultIgnores, vc.exludeIndexFiles...)
+	return append(defaultIgnores, vc.excludeIndexFiles...)
 }
+

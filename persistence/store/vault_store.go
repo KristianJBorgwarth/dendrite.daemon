@@ -7,7 +7,7 @@ import (
 )
 
 type VaultStore struct {
-	Config *persistenceconfig.VaultConfiguration
+	Config *persistenceconfig.VaultConfig
 }
 
 var vaultStore *VaultStore
@@ -18,6 +18,9 @@ func NewVaultStore(
 	templateDir string,
 	exludeIndexFiles []string,
 	overrideDefaultIgnores bool,
+	dailyDir string,
+	dailyFilenameFormat string,
+	dailyTemplateName string,
 ) *VaultStore {
 	if vaultStore != nil {
 		return vaultStore
@@ -28,7 +31,7 @@ func NewVaultStore(
 		templateDir,
 		exludeIndexFiles,
 		overrideDefaultIgnores,
-	)}
+		persistenceconfig.NewDailyNotes(dailyDir, dailyFilenameFormat, dailyTemplateName))}
 	return vaultStore
 }
 
@@ -37,10 +40,6 @@ func GetVaultStore() *VaultStore {
 		panic("VaultStore not initialized. Call NewVaultStore first.")
 	}
 	return vaultStore
-}
-
-func (vs *VaultStore) SetConfig(config persistenceconfig.VaultConfiguration) {
-	vs.Config = &config
 }
 
 func (vs *VaultStore) GetTemplatePath(templateName string) string {
@@ -57,5 +56,5 @@ func (vs *VaultStore) fileTypeCheck(templateName string) string {
 }
 
 func (vs *VaultStore) GetExcludeIndexFiles() []string {
-	return vs.Config.GetExcludeIndexFiles()
+	return vs.Config.ExcludeIndexFiles()
 }

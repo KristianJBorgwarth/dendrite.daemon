@@ -11,11 +11,22 @@ import (
 )
 
 type initializeCommand struct {
-	VaultName              string   `json:"vaultName"`
-	VaultPath              string   `json:"vaultPath"`
-	TemplateDirectory      string   `json:"templateDirectory"`
-	ExcludeIndexFiles      []string `json:"excludeIndexFiles"`
-	OverrideDefaultIgnores bool     `json:"overrideDefaultIgnores"`
+	Config Config `json:"config"`
+}
+
+type Config struct {
+	VaultName              string     `json:"vault_name"`
+	VaultPath              string     `json:"vault_path"`
+	TemplatesDir           string     `json:"templates_dir"`
+	ExcludeIndexFiles      []string   `json:"exclude_index_files"`
+	OverrideDefaultIgnores bool       `json:"override_default_ignores"`
+	DailyNotes             DailyNotes `json:"daily_notes"`
+}
+
+type DailyNotes struct {
+	Dir            string `json:"dir"`
+	FilenameFormat string `json:"filename_format"`
+	TemplateName   string `json:"template_name"`
 }
 
 type InitializeHandler struct {
@@ -35,11 +46,15 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 	}
 
 	store := store.NewVaultStore(
-		cmd.VaultName, 
-		cmd.VaultPath, 
-		cmd.TemplateDirectory, 
-		cmd.ExcludeIndexFiles,
-		cmd.OverrideDefaultIgnores)
+		cmd.Config.VaultName,
+		cmd.Config.VaultPath,
+		cmd.Config.TemplatesDir,
+		cmd.Config.ExcludeIndexFiles,
+		cmd.Config.OverrideDefaultIgnores,
+		cmd.Config.DailyNotes.Dir,
+		cmd.Config.DailyNotes.FilenameFormat,
+		cmd.Config.DailyNotes.TemplateName,
+	)
 
 	err := persistence.InitializeDBContext(store.Config.VaultName())
 	if err != nil {
@@ -56,7 +71,7 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 		return nil, nil
 	}
 
-	err = h.idxRebuilder.RebuildIndex(ctx, cmd.VaultPath)
+	err = h.idxRebuilder.RebuildIndex(ctx, cmd.Config.VaultPath)
 	if err != nil {
 		return nil, err
 	}
