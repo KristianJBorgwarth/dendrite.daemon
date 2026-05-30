@@ -20,16 +20,18 @@ type createNoteCommand struct {
 
 type CreateNoteHandler struct {
 	uow        *repositories.UnitOfWork
-	tagService services.ITagService
+	tagSvc services.ITagService
 	noteRepo   repositories.INoteRepository
+	cfeSvc services.ICfeService
 }
 
 func NewCreateNoteHandler(
 	uow *repositories.UnitOfWork,
-	tagRepo services.ITagService,
+	tagSvc services.ITagService,
 	noteRepo repositories.INoteRepository,
+	cfeSvc services.ICfeService,
 ) *CreateNoteHandler {
-	return &CreateNoteHandler{uow, tagRepo, noteRepo}
+	return &CreateNoteHandler{uow, tagSvc, noteRepo, cfeSvc}
 }
 
 func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -62,7 +64,7 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return notePath, nil
 	}
 
-	tagModels, err := h.tagService.CreateTags(ctx, dbCtx, template.FrontMatter.Tags)
+	tagModels, err := h.tagSvc.CreateTags(ctx, dbCtx, template.FrontMatter.Tags)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +75,11 @@ func (h *CreateNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (an
 		return nil, err
 	}
 
-	if err = h.tagService.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
+	if err = h.tagSvc.CreateNoteTags(ctx, dbCtx, note.ID(), tagModels); err != nil {
+		return nil, err
+	}
+
+	if err = h.cfeSvc.AddCfe(ctx, dbCtx, note.ID(), template.FrontMatter.Custom); err != nil {
 		return nil, err
 	}
 

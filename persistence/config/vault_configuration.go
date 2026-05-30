@@ -52,7 +52,7 @@ func (vc *VaultConfig) TemplateDirectory() string {
 }
 
 func (vc *VaultConfig) ExcludeIndexFiles() []string {
-	defaultIgnores := []string{"index.md", "index"}
+	defaultIgnores := []string{"index.md", "index", ".templates"}
 	if vc.overrideDefaultIgnores {
 		return vc.excludeIndexFiles
 	}

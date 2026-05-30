@@ -7,12 +7,12 @@ import (
 )
 
 type FrontMatter struct {
-	Title   string   `yaml:"title"`
-	Tags    []string `yaml:"tags"`
-	Created string   `yaml:"created"`
-	Updated string   `yaml:"updated"`
-	Date		string   `yaml:"date"`
-	Author  string   `yaml:"author"`
+	Title   string         `yaml:"title"`
+	Tags    []string       `yaml:"tags"`
+	Created string         `yaml:"created"`
+	Updated string         `yaml:"updated"`
+	Date    string         `yaml:"date"`
+	Custom  map[string]any `yaml:",inline"`
 }
 
 func ParseFrontMatter(file []byte) (*FrontMatter, error) {
