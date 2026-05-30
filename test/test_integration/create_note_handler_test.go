@@ -19,6 +19,7 @@ func newCreateNoteHandler() *note.CreateNoteHandler {
 		repositories.NewUnitOfWork(),
 		services.NewTagService(repositories.NewTagRepository(persistence.NewReadContext())),
 		repositories.NewNoteRepository(persistence.NewReadContext()),
+		services.NewCfeService(repositories.NewCfeRepository(persistence.NewReadContext())),
 	)
 }
 

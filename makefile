@@ -7,3 +7,6 @@ test-unit:
 
 test-integration:
 	go test ./test/test_integration/...
+
+build:
+	go build -o dendrite ./cmd
