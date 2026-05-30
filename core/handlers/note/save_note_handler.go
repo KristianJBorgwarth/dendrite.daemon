@@ -20,6 +20,7 @@ type SaveNoteHandler struct {
 	tagService  services.ITagService
 	noteService services.INoteService
 	linkService services.ILinkService
+	cfeSvc			 services.ICfeService
 }
 
 func NewSaveNoteHandler(
@@ -28,8 +29,9 @@ func NewSaveNoteHandler(
 	ts services.ITagService,
 	ns services.INoteService,
 	ls services.ILinkService,
+	cfs services.ICfeService,
 ) *SaveNoteHandler {
-	return &SaveNoteHandler{uow, nr, ts, ns, ls}
+	return &SaveNoteHandler{uow, nr, ts, ns, ls, cfs}
 }
 
 func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any, error) {
@@ -81,6 +83,10 @@ func (h *SaveNoteHandler) Handle(ctx context.Context, raw json.RawMessage) (any,
 	}
 
 	if err = h.linkService.CreateLinks(ctx, tx, note.ID(), file.ExtractedLinks); err != nil {
+		return nil, err
+	}
+
+	if err = h.cfeSvc.AddCfe(ctx, tx, note.ID(), file.FrontMatter.Custom); err != nil {
 		return nil, err
 	}
 

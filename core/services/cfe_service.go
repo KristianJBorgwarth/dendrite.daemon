@@ -29,6 +29,9 @@ func (s *cfeService) AddCfe(
 	if len(cfe) == 0 {
 		return nil
 	}
-	cfeModels := models.MapToCfe(noteID, cfe)
+	cfeModels, err := models.MapToCfe(noteID, cfe)
+	if err != nil {
+		return err
+	}
 	return s.cfeRepo.InsertRange(ctx, dbCtx, cfeModels)
 }

@@ -21,14 +21,16 @@ type noteService struct {
 	tagRepo  repositories.ITagRepository
 	linkRepo repositories.ILinkRepository
 	noteRepo repositories.INoteRepository
+	cfeRepo  repositories.ICfeRepository
 }
 
 func NewNoteService(
 	tagRepo repositories.ITagRepository,
 	linkRepo repositories.ILinkRepository,
 	noteRepo repositories.INoteRepository,
+	cfeRepo repositories.ICfeRepository,
 ) INoteService {
-	return &noteService{tagRepo, linkRepo, noteRepo}
+	return &noteService{tagRepo, linkRepo, noteRepo, cfeRepo}
 }
 
 func (s *noteService) CreateNote(ctx context.Context, dbCtx persistence.IDbContext, path, title, slug string) (*models.Note, error) {
@@ -53,6 +55,10 @@ func (s *noteService) DeleteNoteMetaData(ctx context.Context, dbCtx persistence.
 	}
 
 	if err := s.tagRepo.DeleteNoteTags(ctx, dbCtx, noteID); err != nil {
+		return err
+	}
+
+	if err := s.cfeRepo.Delete(ctx, dbCtx, noteID); err != nil {
 		return err
 	}
 
