@@ -22,7 +22,8 @@ func (r *indexRepository) WipeIndex(ctx context.Context, dbContext persistence.I
 	cmd := `DELETE FROM note; 
 	DELETE FROM tag;
 	DELETE FROM note_tag;
-	DELETE FROM link;`
+	DELETE FROM link;
+	DELETE FROM custom_frontmatter;`
 
 	_, err := dbContext.ExecContext(ctx, cmd)
 	return err

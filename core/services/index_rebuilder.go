@@ -15,6 +15,14 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/store"
 )
 
+type index struct {
+	notes    []*models.Note
+	links    []*models.Link
+	cfe      []*models.CustomFronMatter
+	tags     []*models.Tag
+	noteTags []*models.NoteTag
+}
+
 type IIndexRebuilder interface {
 	RebuildIndex(ctx context.Context, vaultRoot string) error
 }
@@ -25,6 +33,7 @@ type indexRebuilder struct {
 	linkRepo  repositories.ILinkRepository
 	tagRepo   repositories.ITagRepository
 	indexRepo repositories.IIndexRepository
+	cfeRepo   repositories.ICfeRepository
 }
 
 func NewIndexRebuilder(
@@ -33,6 +42,7 @@ func NewIndexRebuilder(
 	linkRepo repositories.ILinkRepository,
 	tagRepo repositories.ITagRepository,
 	indexRepo repositories.IIndexRepository,
+	cfeRepo repositories.ICfeRepository,
 ) *indexRebuilder {
 	return &indexRebuilder{
 		uow:       uow,
@@ -40,6 +50,7 @@ func NewIndexRebuilder(
 		linkRepo:  linkRepo,
 		tagRepo:   tagRepo,
 		indexRepo: indexRepo,
+		cfeRepo:   cfeRepo,
 	}
 }
 
@@ -54,13 +65,16 @@ func (r *indexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) err
 		return err
 	}
 
-	notes, links, tags, noteTags := r.buildDBModels(files)
+	index, err := r.buildDBModels(files)
+	if err != nil {
+		return err
+	}
 
 	if err = r.indexRepo.WipeIndex(ctx, dbctx); err != nil {
 		return err
 	}
 
-	if err = r.buildIndex(ctx, dbctx, notes, links, tags, noteTags); err != nil {
+	if err = r.buildIndex(ctx, dbctx, index); err != nil {
 		return err
 	}
 
@@ -74,24 +88,25 @@ func (r *indexRebuilder) RebuildIndex(ctx context.Context, vaultRoot string) err
 func (r *indexRebuilder) buildIndex(
 	ctx context.Context,
 	dbctx persistence.IDbContext,
-	notes []*models.Note,
-	links []*models.Link,
-	tags []*models.Tag,
-	noteTags []*models.NoteTag,
+	index *index,
 ) error {
-	if err := r.noteRepo.InsertRange(ctx, dbctx, notes); err != nil {
+	if err := r.noteRepo.InsertRange(ctx, dbctx, index.notes); err != nil {
 		return err
 	}
 
-	if err := r.linkRepo.InsertRange(ctx, dbctx, links); err != nil {
+	if err := r.linkRepo.InsertRange(ctx, dbctx, index.links); err != nil {
 		return err
 	}
 
-	if err := r.tagRepo.InsertRange(ctx, dbctx, tags); err != nil {
+	if err := r.tagRepo.InsertRange(ctx, dbctx, index.tags); err != nil {
 		return err
 	}
 
-	if err := r.tagRepo.InsertNoteTags(ctx, dbctx, noteTags); err != nil {
+	if err := r.tagRepo.InsertNoteTags(ctx, dbctx, index.noteTags); err != nil {
+		return err
+	}
+
+	if err := r.cfeRepo.InsertRange(ctx, dbctx, index.cfe); err != nil {
 		return err
 	}
 
@@ -146,9 +161,10 @@ func (r *indexRebuilder) IsValidDirectory(path string) bool {
 	return true
 }
 
-func (r *indexRebuilder) buildDBModels(files []*filehandling.File) ([]*models.Note, []*models.Link, []*models.Tag, []*models.NoteTag) {
+func (r *indexRebuilder) buildDBModels(files []*filehandling.File) (*index, error) {
 	var notes []*models.Note
 	var links []*models.Link
+	var cfe []*models.CustomFronMatter
 	tagMap := make(map[string]*models.Tag)
 	var noteTags []*models.NoteTag
 
@@ -160,6 +176,12 @@ func (r *indexRebuilder) buildDBModels(files []*filehandling.File) ([]*models.No
 		}
 		noteTags = append(noteTags, models.CreateNoteTags(note.ID(), file.FrontMatter.Tags)...)
 		links = append(links, models.MapToLinkModel(note.ID(), file.ExtractedLinks)...)
+
+		mappedCfe, err := models.MapToCfe(note.ID(), file.FrontMatter.Custom)
+		if err != nil {
+			return nil, err
+		}
+		cfe = append(cfe, mappedCfe...)
 	}
 
 	tags := make([]*models.Tag, 0, len(tagMap))
@@ -167,5 +189,11 @@ func (r *indexRebuilder) buildDBModels(files []*filehandling.File) ([]*models.No
 		tags = append(tags, tag)
 	}
 
-	return notes, links, tags, noteTags
+	return &index{
+		notes:    notes,
+		links:    links,
+		tags:     tags,
+		noteTags: noteTags,
+		cfe:      cfe,
+	}, nil
 }

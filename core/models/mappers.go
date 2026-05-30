@@ -1,6 +1,11 @@
 package models
 
-import filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
+import (
+	"errors"
+	"log/slog"
+
+	filehandling "github.com/KristianJBorgwarth/dendrite.daemon/core/file_handling"
+)
 
 func MapToLinkModel(noteID string, extractedLinks []*filehandling.ExtractedLink) []*Link {
 	var links []*Link
@@ -10,20 +15,23 @@ func MapToLinkModel(noteID string, extractedLinks []*filehandling.ExtractedLink)
 	return links
 }
 
-func MapToCfe(noteID string, extractedCfe map[string]any) []*CustomFronMatter {
+func MapToCfe(noteID string, extractedCfe map[string]any) ([]*CustomFronMatter, error) {
 	var cfe []*CustomFronMatter
 	for key, value := range extractedCfe {
 		if valueStr, ok := value.(string); ok {
 			cfe = append(cfe, NewCustomFrontMatter(noteID, key, valueStr))
 			continue
-		} else if valueArr, ok := value.([]string); ok {
+		} else if valueArr, ok := value.([]any); ok {
 			for _, v := range valueArr {
-				cfe = append(cfe, NewCustomFrontMatter(noteID, key, v))
+				if s, ok := v.(string); ok {
+					cfe = append(cfe, NewCustomFrontMatter(noteID, key, s))
+				}
 			}
 			continue
 		} else {
-			cfe = append(cfe, NewCustomFrontMatter(noteID, key, ""))
+			slog.Warn("Unsupported CFE value type, skipping", "key", key, "value", value)
+			return nil, errors.New("unsupported CFE value type")
 		}
 	}
-	return cfe
+	return cfe, nil
 }

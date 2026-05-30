@@ -9,6 +9,7 @@ import (
 
 type ICfeRepository interface {
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, cfe []*models.CustomFronMatter) error
+	Delete(ctx context.Context, dbContext persistence.IDbContext, noteID string) error
 }
 
 type cfeRepository struct {
@@ -26,7 +27,7 @@ func (r *cfeRepository) InsertRange(
 ) error {
 	statement, err := dbCtx.Prepare(
 		`INSERT INTO custom_frontmatter (note_id, key, value)
-		VALUES (?, ?, ?) ON CONFLICT DO NOTHING;`,)
+		VALUES (?, ?, ?) ON CONFLICT DO NOTHING;`)
 	if err != nil {
 		return err
 	}
@@ -35,6 +36,23 @@ func (r *cfeRepository) InsertRange(
 		if _, err := statement.ExecContext(ctx, c.NodeID(), c.Key(), c.Value()); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func (r *cfeRepository) Delete(
+	ctx context.Context,
+	dbCtx persistence.IDbContext,
+	noteID string,
+) error {
+	statement, err := dbCtx.Prepare(`DELETE FROM custom_frontmatter WHERE note_id = ?;`)
+	if err != nil {
+		return err
+	}
+
+	if _, err := statement.ExecContext(ctx, noteID); err != nil {
+		return err
 	}
 
 	return nil

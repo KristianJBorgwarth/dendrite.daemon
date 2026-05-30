@@ -26,18 +26,19 @@ func main() {
 	linkRepo := repositories.NewLinkRepository(persistence.NewReadContext())
 	tagRepo := repositories.NewTagRepository(persistence.NewReadContext())
 	noteRepo := repositories.NewNoteRepository(persistence.NewReadContext())
+	cfeRepo := repositories.NewCfeRepository(persistence.NewReadContext())
 
 	tagService := services.NewTagService(tagRepo)
 	linkService := services.NewLinkService(linkRepo)
-	noteService := services.NewNoteService(tagRepo, linkRepo, noteRepo)
-	cfeSvc := services.NewCfeService(repositories.NewCfeRepository(persistence.NewReadContext()))
-	idxr := services.NewIndexRebuilder(uow, noteRepo, linkRepo, tagRepo, indexRepo )
+	noteService := services.NewNoteService(tagRepo, linkRepo, noteRepo, cfeRepo)
+	cfeSvc := services.NewCfeService(cfeRepo)
+	idxr := services.NewIndexRebuilder(uow, noteRepo, linkRepo, tagRepo, indexRepo, cfeRepo)
 
 	server.RegisterHandler("vault/init", vault.NewInitializeHandler(idxr, noteService))
 	server.RegisterHandler("vault/rebuild", vault.NewRebuildIndexHandler(idxr))
 
 	server.RegisterHandler("note/create", note.NewCreateNoteHandler(uow, tagService, noteRepo, cfeSvc))
-	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService))
+	server.RegisterHandler("note/save", note.NewSaveNoteHandler(uow, noteRepo, tagService, noteService, linkService, cfeSvc))
 	server.RegisterHandler("note/delete", note.NewDeleteNoteHandler(uow, tagService, noteService))
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
 	server.RegisterHandler("note/backlinks", note.NewGetBackLinksHandler(linkRepo, noteRepo))
