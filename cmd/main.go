@@ -43,6 +43,7 @@ func main() {
 	server.RegisterHandler("note/goto", note.NewGotoNoteHandler(noteRepo))
 	server.RegisterHandler("note/backlinks", note.NewGetBackLinksHandler(linkRepo, noteRepo))
 	server.RegisterHandler("note/search_by_tag", note.NewGetNotesByTagHandler(noteRepo))
+	server.RegisterHandler("note/search_by_cfe", note.NewGetNotesByCfeHandler(cfeRepo))
 
 	server.RegisterHandler("completion/tag", completion.NewCompleteTagHandler(tagRepo))
 	server.RegisterHandler("completion/slug", completion.NewCompleteSlugHandler(noteRepo))

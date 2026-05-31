@@ -54,9 +54,7 @@ var Fixture = NewDBFixture()
 
 func TestMain(m *testing.M) {
 	code := m.Run()
-
 	os.RemoveAll(Fixture.DBPath)
-
 	os.Exit(code)
 }
 
