@@ -17,3 +17,11 @@ func NewNoteDto(note *models.Note) *NoteDto {
 		Slug:  note.Slug(),
 	}
 }
+
+func NewNoteDtos(notes []*models.Note) []*NoteDto {
+	dtos := make([]*NoteDto, len(notes))
+	for i, note := range notes {
+		dtos[i] = NewNoteDto(note)
+	}
+	return dtos
+}

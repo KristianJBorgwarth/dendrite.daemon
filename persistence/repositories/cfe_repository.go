@@ -9,6 +9,7 @@ import (
 
 type ICfeRepository interface {
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, cfe []*models.CustomFronMatter) error
+	Search(ctx context.Context, key string, value string) ([]*models.Note, error)
 	Delete(ctx context.Context, dbContext persistence.IDbContext, noteID string) error
 }
 
@@ -56,4 +57,35 @@ func (r *cfeRepository) Delete(
 	}
 
 	return nil
+}
+
+func (r *cfeRepository) Search(
+	ctx context.Context,
+	key string,
+	value string,
+) ([]*models.Note, error) {
+	rows, err := r.readDBContext.QueryContext(
+		ctx,
+		`SELECT n.id, n.path, n.title, n.slug, n.created_at, n.updated_at
+		FROM note n
+		INNER JOIN custom_frontmatter cfe ON n.id = cfe.note_id
+		WHERE cfe.key = ? AND cfe.value LIKE ?;`,
+		key,
+		"%"+value+"%",
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var notes []*models.Note
+	for rows.Next() {
+		var id, title, path, slug, createdAt, updatedAT string
+		if err := rows.Scan(&id, &title, &path, &slug, &createdAt, &updatedAT); err != nil {
+			return nil, err
+		}
+		notes = append(notes, models.NewNote(id, title, path, slug, createdAt, updatedAT))
+	}
+
+	return notes, nil
 }
