@@ -15,7 +15,7 @@ func MapToLinkModel(noteID string, extractedLinks []*filehandling.ExtractedLink)
 	return links
 }
 
-func MapToCfe(noteID string, extractedCfe map[string]any) ([]*CustomFronMatter, error) {
+func MapToCustomFrontmatter(noteID string, extractedCfe map[string]any) ([]*CustomFronMatter, error) {
 	var cfe []*CustomFronMatter
 	for key, value := range extractedCfe {
 		if valueStr, ok := value.(string); ok {

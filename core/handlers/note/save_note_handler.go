@@ -20,7 +20,7 @@ type SaveNoteHandler struct {
 	tagService  services.ITagService
 	noteService services.INoteService
 	linkService services.ILinkService
-	cfeSvc			 services.ICfeService
+	cfeSvc			 services.ICfService
 }
 
 func NewSaveNoteHandler(
@@ -29,7 +29,7 @@ func NewSaveNoteHandler(
 	ts services.ITagService,
 	ns services.INoteService,
 	ls services.ILinkService,
-	cfs services.ICfeService,
+	cfs services.ICfService,
 ) *SaveNoteHandler {
 	return &SaveNoteHandler{uow, nr, ts, ns, ls, cfs}
 }

@@ -13,7 +13,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func newGetNotesByCfeHandler() *note.GetNotesByCfeHandler {
+func newGetNotesByCfeHandler() *note.GetNotesByCfHandler {
 	return note.NewGetNotesByCfeHandler(
 		repositories.NewCfeRepository(persistence.NewReadContext()),
 	)

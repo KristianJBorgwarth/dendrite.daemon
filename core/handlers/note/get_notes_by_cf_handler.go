@@ -8,26 +8,26 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence/repositories"
 )
 
-type getNotesByCfeQuery struct {
+type getNotesByCfQuery struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
 }
 
-type GetNotesByCfeHandler struct {
-	cfeRepo repositories.ICfeRepository
+type GetNotesByCfHandler struct {
+	cfeRepo repositories.ICfRepository
 }
 
 func NewGetNotesByCfeHandler(
-	cfeRepo repositories.ICfeRepository,
-) *GetNotesByCfeHandler {
-	return &GetNotesByCfeHandler{cfeRepo: cfeRepo}
+	cfeRepo repositories.ICfRepository,
+) *GetNotesByCfHandler {
+	return &GetNotesByCfHandler{cfeRepo: cfeRepo}
 }
 
-func (h *GetNotesByCfeHandler) Handle(
+func (h *GetNotesByCfHandler) Handle(
 	ctx context.Context,
 	raw json.RawMessage,
 ) (any, error) {
-	var query getNotesByCfeQuery
+	var query getNotesByCfQuery
 	if err := json.Unmarshal(raw, &query); err != nil {
 		return nil, err
 	}
