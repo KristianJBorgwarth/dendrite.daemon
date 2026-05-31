@@ -33,7 +33,7 @@ type indexRebuilder struct {
 	linkRepo  repositories.ILinkRepository
 	tagRepo   repositories.ITagRepository
 	indexRepo repositories.IIndexRepository
-	cfeRepo   repositories.ICfeRepository
+	cfeRepo   repositories.ICfRepository
 }
 
 func NewIndexRebuilder(
@@ -42,7 +42,7 @@ func NewIndexRebuilder(
 	linkRepo repositories.ILinkRepository,
 	tagRepo repositories.ITagRepository,
 	indexRepo repositories.IIndexRepository,
-	cfeRepo repositories.ICfeRepository,
+	cfeRepo repositories.ICfRepository,
 ) *indexRebuilder {
 	return &indexRebuilder{
 		uow:       uow,
@@ -177,7 +177,7 @@ func (r *indexRebuilder) buildDBModels(files []*filehandling.File) (*index, erro
 		noteTags = append(noteTags, models.CreateNoteTags(note.ID(), file.FrontMatter.Tags)...)
 		links = append(links, models.MapToLinkModel(note.ID(), file.ExtractedLinks)...)
 
-		mappedCfe, err := models.MapToCfe(note.ID(), file.FrontMatter.Custom)
+		mappedCfe, err := models.MapToCustomFrontmatter(note.ID(), file.FrontMatter.Custom)
 		if err != nil {
 			return nil, err
 		}

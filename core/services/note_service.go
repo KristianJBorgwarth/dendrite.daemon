@@ -21,14 +21,14 @@ type noteService struct {
 	tagRepo  repositories.ITagRepository
 	linkRepo repositories.ILinkRepository
 	noteRepo repositories.INoteRepository
-	cfeRepo  repositories.ICfeRepository
+	cfeRepo  repositories.ICfRepository
 }
 
 func NewNoteService(
 	tagRepo repositories.ITagRepository,
 	linkRepo repositories.ILinkRepository,
 	noteRepo repositories.INoteRepository,
-	cfeRepo repositories.ICfeRepository,
+	cfeRepo repositories.ICfRepository,
 ) INoteService {
 	return &noteService{tagRepo, linkRepo, noteRepo, cfeRepo}
 }

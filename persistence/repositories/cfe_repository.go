@@ -7,7 +7,7 @@ import (
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
 )
 
-type ICfeRepository interface {
+type ICfRepository interface {
 	InsertRange(ctx context.Context, dbContext persistence.IDbContext, cfe []*models.CustomFronMatter) error
 	Search(ctx context.Context, key string, value string) ([]*models.Note, error)
 	Delete(ctx context.Context, dbContext persistence.IDbContext, noteID string) error
@@ -17,7 +17,7 @@ type cfeRepository struct {
 	readDBContext persistence.ReadContext
 }
 
-func NewCfeRepository(rdb persistence.ReadContext) ICfeRepository {
+func NewCfeRepository(rdb persistence.ReadContext) ICfRepository {
 	return &cfeRepository{readDBContext: rdb}
 }
 
