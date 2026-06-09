@@ -49,8 +49,10 @@ ASSET="${BINARY}-${GOOS}-${GOARCH}"
 URL="https://github.com/$REPO/releases/download/$TAG/$ASSET"
 
 echo "Downloading $ASSET ($TAG)..."
-curl -fsSL "$URL" -o "$INSTALL_DIR/$BINARY"
-chmod +x "$INSTALL_DIR/$BINARY"
+TMP="$(mktemp)"
+curl -fsSL "$URL" -o "$TMP"
+chmod +x "$TMP"
+mv "$TMP" "$INSTALL_DIR/$BINARY"
 
 echo ""
 echo "dendrite $TAG installed to $INSTALL_DIR/$BINARY"
