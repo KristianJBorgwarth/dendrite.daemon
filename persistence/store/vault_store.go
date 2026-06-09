@@ -44,7 +44,8 @@ func GetVaultStore() *VaultStore {
 
 func (vs *VaultStore) GetTemplatePath(templateName string) string {
 	templateName = vs.fileTypeCheck(templateName)
-	return path.Join(vs.Config.TemplateDirectory(), templateName)
+	path := path.Join(vs.Config.VaultPath(), vs.Config.TemplateDirectory(), templateName)
+	return path
 }
 
 func (vs *VaultStore) fileTypeCheck(templateName string) string {
