@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"os"
-	"path"
 	"path/filepath"
 	"testing"
 
@@ -46,7 +45,7 @@ func NewDBFixture() *DBFixture {
 		DB:          dbContext.DB,
 		DBPath:      dbPath,
 		TestContext: context.Background(),
-		VaultStore:  store.NewVaultStore("testVault", vaultPath, path.Join(vaultPath, "templates"), []string{}, false, "", "", ""),
+		VaultStore:  store.NewVaultStore("testVault", vaultPath, "templates", []string{}, false, "", "", ""),
 	}
 }
 

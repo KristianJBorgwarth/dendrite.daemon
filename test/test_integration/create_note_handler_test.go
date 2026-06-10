@@ -55,7 +55,7 @@ func TestCreateNoteHandler_WithTemplate_CreatesNoteFileWithTagsAndReturnsPath(t 
 	handler := newCreateNoteHandler()
 
 	vaultPath := Fixture.VaultStore.Config.VaultPath()
-	templateDir := Fixture.VaultStore.Config.TemplateDirectory()
+	templateDir := filepath.Join(Fixture.VaultStore.Config.VaultPath(), Fixture.VaultStore.Config.TemplateDirectory())
 	require.NoError(t, os.MkdirAll(templateDir, 0o755))
 
 	templatePath := filepath.Join(templateDir, "template.md")

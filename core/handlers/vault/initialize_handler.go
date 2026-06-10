@@ -3,6 +3,7 @@ package vault
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/services"
@@ -43,6 +44,10 @@ func (h InitializeHandler) Handle(ctx context.Context, raw json.RawMessage) (any
 
 	if err := json.Unmarshal(raw, &cmd); err != nil {
 		return nil, err
+	}
+
+	if cmd.Config.VaultPath == "" {
+		return nil, errors.New("vault_path is empty — check your dendrite.nvim config")
 	}
 
 	store := store.NewVaultStore(
