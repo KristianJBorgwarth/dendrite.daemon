@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"errors"
 
 	"github.com/KristianJBorgwarth/dendrite.daemon/core/models"
 	"github.com/KristianJBorgwarth/dendrite.daemon/persistence"
@@ -14,6 +15,7 @@ type INoteService interface {
 	DeleteNote(ctx context.Context, dbCtx persistence.IDbContext, path string) error
 	GetByPath(ctx context.Context, dbCtx persistence.IDbContext, path string) (*models.Note, error)
 	UpdateNote(ctx context.Context, dbCtx persistence.IDbContext, noteID, path, title, slug string) error
+	RenameNote(ctx context.Context, dbCtx persistence.IDbContext, oldPath, newPath string) error
 	GetNoteCount(ctx context.Context) (int, error)
 }
 
@@ -83,4 +85,8 @@ func (s *noteService) GetNoteCount(ctx context.Context) (int, error) {
 
 func (s *noteService) GetByPath(ctx context.Context, dbCtx persistence.IDbContext, path string) (*models.Note, error) {
 	return s.noteRepo.GetByPath(ctx,path)
+}
+
+func (s *noteService) RenameNote(ctx context.Context, dbCtx persistence.IDbContext, oldPath, newPath string) error {
+	return errors.New("not implemented")
 }
