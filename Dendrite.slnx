@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/Dendrite.Daemon/Dendrite.Daemon.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/Dendrite.Daemon.Tests/Dendrite.Daemon.Tests.csproj" />
+  </Folder>
+</Solution>

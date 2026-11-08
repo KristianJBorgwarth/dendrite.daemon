@@ -1,0 +1,11 @@
+CREATE TABLE IF NOT EXISTS tag (
+  name TEXT PRIMARY KEY
+);
+
+CREATE TABLE IF NOT EXISTS note_tag (
+  note_id TEXT,
+  tag_id TEXT,
+  PRIMARY KEY (note_id, tag_id),
+  FOREIGN KEY(note_id) REFERENCES note(id) ON DELETE CASCADE,
+  FOREIGN KEY(tag_id) REFERENCES tag(name) ON DELETE CASCADE
+);
