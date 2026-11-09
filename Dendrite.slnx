@@ -1,6 +1,9 @@
 <Solution>
   <Folder Name="/src/">
+    <Project Path="src/Dendrite.Application/Dendrite.Application.csproj" />
     <Project Path="src/Dendrite.Daemon/Dendrite.Daemon.csproj" />
+    <Project Path="src/Dendrite.Domain/Dendrite.Domain.csproj" />
+    <Project Path="src/Dendrite.Infrastructure/Dendrite.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Dendrite.Daemon.Tests/Dendrite.Daemon.Tests.csproj" />

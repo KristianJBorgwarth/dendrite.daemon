@@ -1,7 +1,7 @@
 using System.Runtime.CompilerServices;
 using Dendrite.Daemon;
-using Dendrite.Daemon.Features.Vault;
-using Dendrite.Daemon.Persistence;
+using Dendrite.Application.Features.Vault;
+using Dendrite.Infrastructure.Persistence;
 using Mediator;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -11,11 +11,8 @@ namespace Dendrite.Daemon.Tests;
 internal static class TestEnvironment
 {
     [ModuleInitializer]
-    internal static void Init()
-    {
-        Log.Init();
+    internal static void Init() =>
         Environment.SetEnvironmentVariable("XDG_DATA_HOME", Path.Combine(Path.GetTempPath(), "dendrite-tests-xdg"));
-    }
 }
 
 /// <summary>An isolated vault directory plus index database, wired through the real service graph.</summary>

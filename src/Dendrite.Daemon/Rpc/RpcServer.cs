@@ -1,5 +1,6 @@
 using System.Text.Json;
 using System.Text.Json.Serialization.Metadata;
+using Dendrite.Application;
 using Mediator;
 
 namespace Dendrite.Daemon.Rpc;
