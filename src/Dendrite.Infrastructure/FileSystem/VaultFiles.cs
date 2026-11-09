@@ -3,8 +3,15 @@ using Dendrite.Application.Abstractions;
 
 namespace Dendrite.Infrastructure.FileSystem;
 
-internal sealed class VaultFiles(VaultContext vault) : IVaultFiles
+internal sealed class VaultFiles : IVaultFiles
 {
+    private readonly VaultContext _vault;
+
+    public VaultFiles(VaultContext vault)
+    {
+        _vault = vault;
+    }
+
     public string ReadText(string path) => File.ReadAllText(path);
 
     public string ReadTemplate(string templateName)
@@ -12,13 +19,13 @@ internal sealed class VaultFiles(VaultContext vault) : IVaultFiles
         if (Path.GetExtension(templateName) != ".md")
             templateName += ".md";
 
-        var config = vault.Config;
+        var config = _vault.Config;
         return File.ReadAllText(Path.GetFullPath(Path.Join(config.VaultPath, config.TemplatesDir, templateName)));
     }
 
     public IReadOnlyList<string> ListNotePaths()
     {
-        var config = vault.Config;
+        var config = _vault.Config;
         var ignored = config.EffectiveExcludes;
         var paths = new List<string>();
         Walk(config.VaultPath);

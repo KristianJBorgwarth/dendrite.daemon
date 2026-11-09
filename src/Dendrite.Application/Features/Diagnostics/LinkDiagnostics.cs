@@ -1,30 +1,13 @@
-using Dendrite.Application.Abstractions;
 using Mediator;
 
 namespace Dendrite.Application.Features.Diagnostics;
 
-public sealed record LinkDiagnostics(string Path) : IQuery<List<LinkDiagnosticDto>>;
-
-public sealed class LinkDiagnosticsHandler(INoteRepository notes, ILinkRepository links)
-    : IQueryHandler<LinkDiagnostics, List<LinkDiagnosticDto>>
+public sealed record LinkDiagnostics : IQuery<List<LinkDiagnosticDto>>
 {
-    public ValueTask<List<LinkDiagnosticDto>> Handle(LinkDiagnostics query, CancellationToken cancellationToken)
+    public string Path { get; }
+
+    public LinkDiagnostics(string path)
     {
-        var note = notes.GetByPath(query.Path);
-        if (note is null)
-            return ValueTask.FromResult<List<LinkDiagnosticDto>>([]);
-
-        var diagnostics = links.GetBrokenLinks(note.Id)
-            .Select(l => new LinkDiagnosticDto(
-                l.Id,
-                note.Path,
-                l.Line,
-                l.Col,
-                l.Raw,
-                l.TargetSlug,
-                "Broken link: target note does not exist"))
-            .ToList();
-
-        return ValueTask.FromResult(diagnostics);
+        Path = path;
     }
 }

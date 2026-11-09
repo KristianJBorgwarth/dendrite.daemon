@@ -6,7 +6,7 @@ using Mediator;
 namespace Dendrite.Daemon.Rpc;
 
 /// <summary>Newline-delimited JSON-RPC 2.0 over a text stream, dispatching each method to Mediator.</summary>
-public sealed class RpcServer(ISender sender)
+public sealed class RpcServer
 {
     private const int ParseError = -32700;
     private const int InvalidParams = -32602;
@@ -16,6 +16,12 @@ public sealed class RpcServer(ISender sender)
     private delegate Task<string> MethodHandler(JsonElement? parameters, CancellationToken ct);
 
     private readonly Dictionary<string, MethodHandler> _methods = [];
+    private readonly ISender _sender;
+
+    public RpcServer(ISender sender)
+    {
+        _sender = sender;
+    }
 
     public RpcServer Query<TRequest, TResponse>(
         string method,
@@ -25,7 +31,7 @@ public sealed class RpcServer(ISender sender)
     {
         _methods[method] = async (parameters, ct) =>
         {
-            var response = await sender.Send(ReadParams(parameters, requestInfo), ct);
+            var response = await _sender.Send(ReadParams(parameters, requestInfo), ct);
             return JsonSerializer.Serialize(response, responseInfo);
         };
         return this;
@@ -39,7 +45,7 @@ public sealed class RpcServer(ISender sender)
     {
         _methods[method] = async (parameters, ct) =>
         {
-            var response = await sender.Send(ReadParams(parameters, requestInfo), ct);
+            var response = await _sender.Send(ReadParams(parameters, requestInfo), ct);
             return JsonSerializer.Serialize(response, responseInfo);
         };
         return this;
@@ -50,7 +56,7 @@ public sealed class RpcServer(ISender sender)
     {
         _methods[method] = async (parameters, ct) =>
         {
-            await sender.Send(ReadParams(parameters, requestInfo), ct);
+            await _sender.Send(ReadParams(parameters, requestInfo), ct);
             return "null";
         };
         return this;
