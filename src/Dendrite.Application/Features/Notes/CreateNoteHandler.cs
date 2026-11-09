@@ -1,5 +1,6 @@
 using Dendrite.Application.Abstractions;
 using Dendrite.Application.Services;
+using Dendrite.Application.Vaults;
 using Dendrite.Domain.FileHandling;
 using Dendrite.Domain.Models;
 using Mediator;

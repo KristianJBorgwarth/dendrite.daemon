@@ -1,5 +1,6 @@
 using Dendrite.Application.Abstractions;
 using Dendrite.Application.Services;
+using Dendrite.Application.Vaults;
 using Dendrite.Domain.Vault;
 using Mediator;
 
@@ -7,17 +8,20 @@ namespace Dendrite.Application.Features.Vault;
 
 public sealed class InitializeVaultHandler : ICommandHandler<InitializeVault, Unit>
 {
+    private readonly VaultRegistry _registry;
     private readonly VaultContext _vault;
     private readonly IIndexDatabase _indexDatabase;
     private readonly INoteQueries _queries;
     private readonly IndexRebuilder _rebuilder;
 
     public InitializeVaultHandler(
+        VaultRegistry registry,
         VaultContext vault,
         IIndexDatabase indexDatabase,
         INoteQueries queries,
         IndexRebuilder rebuilder)
     {
+        _registry = registry;
         _vault = vault;
         _indexDatabase = indexDatabase;
         _queries = queries;
@@ -33,15 +37,26 @@ public sealed class InitializeVaultHandler : ICommandHandler<InitializeVault, Un
         var daily = c.DailyNotes ?? new DailyNotesConfig();
         var vaultPath = c.VaultPath.Length > 1 ? c.VaultPath.TrimEnd('/', '\\') : c.VaultPath;
 
-        _vault.Initialize(new VaultConfig(
+        var config = new VaultConfig(
             c.VaultName,
             vaultPath,
             c.TemplatesDir,
             c.ExcludeIndexFiles ?? [],
             c.OverrideDefaultIgnores,
-            new DailyNotes(daily.Dir, daily.FilenameFormat, daily.TemplateName)));
+            new DailyNotes(daily.Dir, daily.FilenameFormat, daily.TemplateName));
 
-        _indexDatabase.Open(c.VaultName);
+        var added = _registry.Register(config);
+        try
+        {
+            _vault.Select(config);
+            _indexDatabase.Open(c.VaultName);
+        }
+        catch
+        {
+            if (added)
+                _registry.Remove(c.VaultName);
+            throw;
+        }
 
         if (_queries.CountNotes() > 0)
         {

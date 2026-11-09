@@ -17,12 +17,13 @@ public static class Composition
         services.AddMediator();
         services.AddApplication();
         services.AddInfrastructure();
-        services.AddSingleton(sp => CreateRpcServer(sp.GetRequiredService<ISender>()));
+        services.AddSingleton<VaultDispatcher>();
+        services.AddSingleton(sp => CreateRpcServer(sp.GetRequiredService<VaultDispatcher>()));
 
         return services.BuildServiceProvider();
     }
 
-    private static RpcServer CreateRpcServer(ISender sender)
+    private static RpcServer CreateRpcServer(VaultDispatcher sender)
     {
         var ctx = RpcJsonContext.Default;
 
