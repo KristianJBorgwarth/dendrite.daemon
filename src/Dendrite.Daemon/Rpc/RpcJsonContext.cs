@@ -1,10 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Dendrite.Daemon.Dtos;
-using Dendrite.Daemon.Features.Completion;
-using Dendrite.Daemon.Features.Diagnostics;
-using Dendrite.Daemon.Features.Note;
-using Dendrite.Daemon.Features.Vault;
+using Dendrite.Application;
+using Dendrite.Application.Features.Completion;
+using Dendrite.Application.Features.Diagnostics;
+using Dendrite.Application.Features.Notes;
+using Dendrite.Application.Features.Vault;
 
 namespace Dendrite.Daemon.Rpc;
 

@@ -1,9 +1,8 @@
 using System.Text;
+using Dendrite.Application;
 using Dendrite.Daemon;
 using Dendrite.Daemon.Rpc;
 using Microsoft.Extensions.DependencyInjection;
-
-Log.Init();
 
 await using var services = Composition.BuildServices();
 

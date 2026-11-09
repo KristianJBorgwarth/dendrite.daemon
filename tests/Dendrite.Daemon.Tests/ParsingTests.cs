@@ -1,5 +1,5 @@
 using AwesomeAssertions;
-using Dendrite.Daemon.FileHandling;
+using Dendrite.Domain.FileHandling;
 
 namespace Dendrite.Daemon.Tests;
 
@@ -44,7 +44,7 @@ public class LinkTests
     [Fact]
     public void ExtractLinks_ReportsLineAndByteColumn()
     {
-        var links = NoteFileReader.ExtractLinks("first\nåå [[a/b|Shown]] and [[c]]");
+        var links = NoteFileParser.ExtractLinks("first\nåå [[a/b|Shown]] and [[c]]");
 
         links.Should().HaveCount(2);
         links[0].Should().Be(new ExtractedLink("[[a/b|Shown]]", "Shown", "a/b", 2, 6));

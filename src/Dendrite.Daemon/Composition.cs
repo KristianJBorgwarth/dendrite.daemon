@@ -1,8 +1,6 @@
-using Dendrite.Daemon.FileHandling;
-using Dendrite.Daemon.Persistence;
-using Dendrite.Daemon.Persistence.Repositories;
+using Dendrite.Application;
 using Dendrite.Daemon.Rpc;
-using Dendrite.Daemon.Services;
+using Dendrite.Infrastructure;
 using Mediator;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -12,21 +10,13 @@ public static class Composition
 {
     public static ServiceProvider BuildServices()
     {
+        Log.Configure(FileLog.Write);
+
         var services = new ServiceCollection();
 
         services.AddMediator();
-
-        services.AddSingleton<Database>();
-        services.AddSingleton<VaultStore>();
-        services.AddSingleton<UnitOfWork>();
-        services.AddSingleton<NoteRepository>();
-        services.AddSingleton<TagRepository>();
-        services.AddSingleton<LinkRepository>();
-        services.AddSingleton<CfeRepository>();
-        services.AddSingleton<IndexRepository>();
-        services.AddSingleton<NoteMetadataService>();
-        services.AddSingleton<IndexRebuilder>();
-        services.AddSingleton<TemplateRenderer>();
+        services.AddApplication();
+        services.AddInfrastructure();
         services.AddSingleton(sp => CreateRpcServer(sp.GetRequiredService<ISender>()));
 
         return services.BuildServiceProvider();

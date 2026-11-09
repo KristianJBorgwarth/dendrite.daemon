@@ -4,6 +4,15 @@ C# Native AOT port of the Dendrite daemon. It speaks the same newline-delimited 
 
 Stack: .NET 10 (Native AOT), Mediator (source generated), Dapper.AOT + Microsoft.Data.Sqlite, YamlDotNet (representation model, reflection-free), System.Text.Json source generation.
 
+## Layout
+
+Dependencies point inward: `Daemon → Infrastructure → Application → Domain`.
+
+- `Dendrite.Domain`: models, frontmatter/link/slug parsing, `VaultConfig`. No I/O.
+- `Dendrite.Application`: Mediator commands/queries and handlers, services, and the ports they depend on (`INoteRepository`, `IUnitOfWork`, `IVaultFiles`, ...).
+- `Dendrite.Infrastructure`: SQLite + Dapper.AOT repositories, migrations, unit of work, vault file access.
+- `Dendrite.Daemon`: the `dendrite` executable. JSON-RPC server, DI wiring, and the Mediator source generator (it must live in the host to see the handlers).
+
 ## Build and test
 
 ```sh
