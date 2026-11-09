@@ -2,14 +2,22 @@ using YamlDotNet.RepresentationModel;
 
 namespace Dendrite.Domain.FileHandling;
 
-public sealed record FrontMatter(
-    string Title,
-    IReadOnlyList<string> Tags,
-    IReadOnlyList<KeyValuePair<string, string>> Custom)
+public sealed record FrontMatter
 {
     public static readonly FrontMatter Empty = new("", [], []);
 
     private static readonly HashSet<string> KnownKeys = ["title", "tags", "created", "updated", "date"];
+
+    public string Title { get; }
+    public IReadOnlyList<string> Tags { get; }
+    public IReadOnlyList<KeyValuePair<string, string>> Custom { get; }
+
+    public FrontMatter(string title, IReadOnlyList<string> tags, IReadOnlyList<KeyValuePair<string, string>> custom)
+    {
+        Title = title;
+        Tags = tags;
+        Custom = custom;
+    }
 
     public static FrontMatter? Parse(string file)
     {

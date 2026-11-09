@@ -1,14 +1,5 @@
 namespace Dendrite.Domain.FileHandling;
 
-public enum LinkKind
-{
-    Unknown,
-    Note,
-    Url,
-}
-
-public readonly record struct ParsedLink(LinkKind Kind, string Target);
-
 public static class LinkParser
 {
     public static ParsedLink Parse(string s)
