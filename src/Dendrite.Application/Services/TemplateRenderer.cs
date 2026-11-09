@@ -3,10 +3,15 @@ using Dendrite.Domain.FileHandling;
 
 namespace Dendrite.Application.Services;
 
-public sealed record Template(string Content, string Title, string Slug, string Filename, FrontMatter FrontMatter);
-
-public sealed class TemplateRenderer(IVaultFiles files)
+public sealed class TemplateRenderer
 {
+    private readonly IVaultFiles _files;
+
+    public TemplateRenderer(IVaultFiles files)
+    {
+        _files = files;
+    }
+
     public Template Render(string templateName, string title, string directory)
     {
         var fileNameSlug = Slug.Slugify(title);
@@ -15,7 +20,7 @@ public sealed class TemplateRenderer(IVaultFiles files)
 
         var raw = templateName == ""
             ? DefaultTemplate(title)
-            : files.ReadTemplate(templateName);
+            : _files.ReadTemplate(templateName);
 
         var content = raw
             .Replace("{{title}}", title)

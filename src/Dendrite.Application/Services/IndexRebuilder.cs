@@ -4,36 +4,41 @@ using Dendrite.Domain.Models;
 
 namespace Dendrite.Application.Services;
 
-public sealed class IndexRebuilder(
-    IUnitOfWork uow,
-    INoteRepository notes,
-    ILinkRepository links,
-    ITagRepository tags,
-    IIndexRepository index,
-    ICfeRepository cfe,
-    IVaultFiles files,
-    VaultContext vault)
+public sealed class IndexRebuilder
 {
+    private readonly IUnitOfWork _uow;
+    private readonly INoteRepository _notes;
+    private readonly IIndexMaintenance _index;
+    private readonly IVaultFiles _files;
+    private readonly VaultContext _vault;
+
+    public IndexRebuilder(
+        IUnitOfWork uow,
+        INoteRepository notes,
+        IIndexMaintenance index,
+        IVaultFiles files,
+        VaultContext vault)
+    {
+        _uow = uow;
+        _notes = notes;
+        _index = index;
+        _files = files;
+        _vault = vault;
+    }
+
     public void Rebuild()
     {
-        var root = vault.Config.VaultPath;
-        var parsed = files.ListNotePaths()
-            .Select(path => NoteFileParser.Parse(root, path, files.ReadText(path)))
+        var root = _vault.Config.VaultPath;
+        var parsed = _files.ListNotePaths()
+            .Select(path => NoteFileParser.Parse(root, path, _files.ReadText(path)))
             .ToList();
 
-        using var tx = uow.Begin();
+        using var tx = _uow.Begin();
 
-        index.Wipe();
+        _index.Wipe();
 
         foreach (var file in parsed)
-        {
-            var note = Note.Create(file.Path, file.Title, file.Slug);
-            notes.Insert(note);
-            tags.Insert(file.FrontMatter.Tags.Select(t => new Tag(t)));
-            tags.InsertNoteTags(file.FrontMatter.Tags.Select(t => new NoteTag(note.Id, t)));
-            links.Insert(file.Links.Select(l => Link.Create(note.Id, l.TargetSlug, l.Raw, l.Display, l.Line, l.Col)));
-            cfe.InsertRange(file.FrontMatter.Custom.Select(e => new CustomFrontMatter(note.Id, e.Key, e.Value)));
-        }
+            _notes.Add(Note.Create(file));
 
         tx.Commit();
     }

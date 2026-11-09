@@ -8,9 +8,9 @@ Stack: .NET 10 (Native AOT), Mediator (source generated), Dapper.AOT + Microsoft
 
 Dependencies point inward: `Daemon → Infrastructure → Application → Domain`.
 
-- `Dendrite.Domain`: models, frontmatter/link/slug parsing, `VaultConfig`. No I/O.
-- `Dendrite.Application`: Mediator commands/queries and handlers, services, and the ports they depend on (`INoteRepository`, `IUnitOfWork`, `IVaultFiles`, ...).
-- `Dendrite.Infrastructure`: SQLite + Dapper.AOT repositories, migrations, unit of work, vault file access.
+- `Dendrite.Domain`: the `Note` aggregate (owns its tags, links and custom frontmatter; changed only via `Reindex`), `INoteRepository`, frontmatter/link/slug parsing, `VaultConfig`. No I/O.
+- `Dendrite.Application`: Mediator commands/queries and handlers, services, and the ports they depend on (`INoteQueries` for reads, `IUnitOfWork`, `IVaultFiles`, ...). Commands go through the aggregate; queries read straight from the index.
+- `Dendrite.Infrastructure`: SQLite + Dapper.AOT (`NoteRepository` persists the whole aggregate, `NoteQueries` serves reads), migrations, unit of work, vault file access.
 - `Dendrite.Daemon`: the `dendrite` executable. JSON-RPC server, DI wiring, and the Mediator source generator (it must live in the host to see the handlers).
 
 ## Build and test

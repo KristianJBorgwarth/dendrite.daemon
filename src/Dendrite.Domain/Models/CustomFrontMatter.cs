@@ -1,15 +1,13 @@
 namespace Dendrite.Domain.Models;
 
-#pragma warning disable IDE0290 // Use primary constructor
-public sealed class CustomFrontMatter
+/// <summary>A custom frontmatter key/value pair on a note. Owned by the <see cref="Note"/> aggregate.</summary>
+public sealed record CustomFrontMatter
 {
-    public string NoteId { get; }
     public string Key { get; }
     public string Value { get; }
 
-    public CustomFrontMatter(string noteId, string key, string value)
+    public CustomFrontMatter(string key, string value)
     {
-        NoteId = noteId;
         Key = key;
         Value = value;
     }
