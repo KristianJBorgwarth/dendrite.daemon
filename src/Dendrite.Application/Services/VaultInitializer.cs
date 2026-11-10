@@ -13,19 +13,22 @@ public sealed class VaultInitializer
     private readonly IIndexDatabase _indexDatabase;
     private readonly INoteQueries _queries;
     private readonly IndexRebuilder _rebuilder;
+    private readonly IVaultCatalog _catalog;
 
     public VaultInitializer(
         VaultRegistry registry,
         VaultContext vault,
         IIndexDatabase indexDatabase,
         INoteQueries queries,
-        IndexRebuilder rebuilder)
+        IndexRebuilder rebuilder,
+        IVaultCatalog catalog)
     {
         _registry = registry;
         _vault = vault;
         _indexDatabase = indexDatabase;
         _queries = queries;
         _rebuilder = rebuilder;
+        _catalog = catalog;
     }
 
     public static VaultConfig ToConfig(VaultConfigDto c)
@@ -45,7 +48,7 @@ public sealed class VaultInitializer
             new DailyNotes(daily.Dir, daily.FilenameFormat, daily.TemplateName));
     }
 
-    public void Initialize(VaultConfig config)
+    public void Initialize(VaultConfig config, bool activate = false)
     {
         var added = _registry.Register(config);
         try
@@ -59,6 +62,11 @@ public sealed class VaultInitializer
                 _registry.Remove(config.VaultName);
             throw;
         }
+
+        if (activate)
+            _registry.Use(config.VaultName);
+
+        _catalog.Save(_registry.ToState());
 
         if (_queries.CountNotes() > 0)
         {

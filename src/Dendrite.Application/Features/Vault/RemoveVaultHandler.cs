@@ -9,11 +9,13 @@ public sealed class RemoveVaultHandler : ICommandHandler<RemoveVault, Unit>
 {
     private readonly VaultRegistry _registry;
     private readonly IIndexDatabase _indexes;
+    private readonly IVaultCatalog _catalog;
 
-    public RemoveVaultHandler(VaultRegistry registry, IIndexDatabase indexes)
+    public RemoveVaultHandler(VaultRegistry registry, IIndexDatabase indexes, IVaultCatalog catalog)
     {
         _registry = registry;
         _indexes = indexes;
+        _catalog = catalog;
     }
 
     public ValueTask<Unit> Handle(RemoveVault command, CancellationToken cancellationToken)
@@ -22,6 +24,7 @@ public sealed class RemoveVaultHandler : ICommandHandler<RemoveVault, Unit>
             throw new InvalidOperationException($"unknown vault '{command.Vault}'");
 
         _indexes.Close(command.Vault);
+        _catalog.Save(_registry.ToState());
         return ValueTask.FromResult(Unit.Value);
     }
 }

@@ -20,6 +20,7 @@ public static class DependencyInjection
         services.AddSingleton<IIndexMaintenance, IndexMaintenance>();
         services.AddSingleton<IVaultFiles, VaultFiles>();
         services.AddSingleton<IVaultScaffolder, VaultScaffolder>();
+        services.AddSingleton<IVaultCatalog, VaultCatalog>();
         return services;
     }
 }

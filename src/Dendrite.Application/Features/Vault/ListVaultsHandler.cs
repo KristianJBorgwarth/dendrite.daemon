@@ -19,7 +19,7 @@ public sealed class ListVaultsHandler : IQueryHandler<ListVaults, List<VaultInfo
     {
         var vaults = _registry.All
             .OrderBy(v => v.VaultName, StringComparer.Ordinal)
-            .Select(v => new VaultInfoDto(v.VaultName, v.VaultPath, _indexes.CountNotes(v.VaultName)))
+            .Select(v => new VaultInfoDto(v.VaultName, v.VaultPath, _indexes.CountNotes(v.VaultName), v.VaultName == _registry.Active))
             .ToList();
 
         return ValueTask.FromResult(vaults);

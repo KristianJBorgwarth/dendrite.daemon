@@ -1,10 +1,12 @@
 using System.Text;
 using Dendrite.Application;
+using Dendrite.Application.Services;
 using Dendrite.Daemon;
 using Dendrite.Daemon.Rpc;
 using Microsoft.Extensions.DependencyInjection;
 
 await using var services = Composition.BuildServices();
+services.GetRequiredService<VaultRestorer>().Restore();
 
 var utf8 = new UTF8Encoding(false);
 using var input = new StreamReader(Console.OpenStandardInput(), utf8);

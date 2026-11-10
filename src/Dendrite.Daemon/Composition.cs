@@ -1,4 +1,5 @@
 using Dendrite.Application;
+using Dendrite.Application.Abstractions;
 using Dendrite.Daemon.Rpc;
 using Dendrite.Infrastructure;
 using Mediator;
@@ -8,7 +9,8 @@ namespace Dendrite.Daemon;
 
 public static class Composition
 {
-    public static ServiceProvider BuildServices()
+    /// <param name="catalog">Where vaults are remembered; defaults to the on-disk catalog.</param>
+    public static ServiceProvider BuildServices(IVaultCatalog? catalog = null)
     {
         Log.Configure(FileLog.Write);
 
@@ -17,6 +19,8 @@ public static class Composition
         services.AddMediator();
         services.AddApplication();
         services.AddInfrastructure();
+        if (catalog is not null)
+            services.AddSingleton(catalog);
         services.AddSingleton<VaultDispatcher>();
         services.AddSingleton(sp => CreateRpcServer(sp.GetRequiredService<VaultDispatcher>()));
 
@@ -33,6 +37,7 @@ public static class Composition
             .Command("vault/rebuild", ctx.RebuildIndex)
             .Query("vault/list", ctx.ListVaults, ctx.ListVaultInfoDto)
             .Command("vault/remove", ctx.RemoveVault)
+            .Command("vault/use", ctx.UseVault)
             .Command("note/create", ctx.CreateNote, ctx.String)
             .Command("note/save", ctx.SaveNote)
             .Command("note/delete", ctx.DeleteNote)
