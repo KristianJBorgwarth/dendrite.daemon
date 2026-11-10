@@ -29,6 +29,7 @@ public static class Composition
 
         return new RpcServer(sender)
             .Command("vault/init", ctx.InitializeVault)
+            .Command("vault/create", ctx.CreateVault)
             .Command("vault/rebuild", ctx.RebuildIndex)
             .Query("vault/list", ctx.ListVaults, ctx.ListVaultInfoDto)
             .Command("vault/remove", ctx.RemoveVault)

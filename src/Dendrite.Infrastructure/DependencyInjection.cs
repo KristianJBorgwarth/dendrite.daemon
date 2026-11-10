@@ -19,6 +19,7 @@ public static class DependencyInjection
         services.AddSingleton<INoteQueries, NoteQueries>();
         services.AddSingleton<IIndexMaintenance, IndexMaintenance>();
         services.AddSingleton<IVaultFiles, VaultFiles>();
+        services.AddSingleton<IVaultScaffolder, VaultScaffolder>();
         return services;
     }
 }

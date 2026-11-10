@@ -30,6 +30,19 @@ public sealed class VaultRegistry
 
     public bool Remove(string name) => _vaults.Remove(name);
 
+    /// <summary>True when the vault is already registered at the same path; throws when the name belongs to another path.</summary>
+    public bool CheckAvailability(VaultConfig config)
+    {
+        if (!_vaults.TryGetValue(config.VaultName, out var existing))
+            return false;
+
+        if (existing.VaultPath != config.VaultPath)
+            throw new InvalidOperationException(
+                $"vault '{config.VaultName}' is already registered at '{existing.VaultPath}'");
+
+        return true;
+    }
+
     /// <summary>Picks the vault by explicit name, then by the vault root containing the path, then the only vault.</summary>
     public VaultConfig Resolve(string? vault, string? path)
     {
@@ -65,7 +78,7 @@ public sealed class VaultRegistry
         return fullPath.StartsWith(normalized + System.IO.Path.DirectorySeparatorChar, StringComparison.Ordinal);
     }
 
-    private static void ValidateName(string name)
+    public static void ValidateName(string name)
     {
         if (string.IsNullOrWhiteSpace(name)
             || name.Contains('/')

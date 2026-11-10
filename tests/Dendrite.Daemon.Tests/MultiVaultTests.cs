@@ -124,6 +124,79 @@ public sealed class MultiVaultTests : IDisposable
     }
 
     [Fact]
+    public async Task CreateVault_ScaffoldsTemplatesRegistersAndIndexes()
+    {
+        var name = $"mv-{Guid.NewGuid():N}";
+        var root = Path.Combine(Directory.CreateTempSubdirectory("dendrite-mv-").FullName, "fresh");
+        _names.Add(name);
+        _roots.Add(Path.GetDirectoryName(root)!);
+
+        await Sender.Send(new CreateVault(new VaultConfigDto { VaultName = name, VaultPath = root }));
+
+        File.Exists(Path.Combine(root, ".templates", "daily.md")).Should().BeTrue();
+        File.Exists(Path.Combine(root, ".templates", "scratch.md")).Should().BeTrue();
+        var path = await Sender.Send(new CreateNote("First", "daily", "/daily", name));
+        path.Should().Be(Path.Combine(root, "daily", "first.md"));
+        Count(name, "SELECT COUNT(*) FROM note").Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateVault_OverExistingVault_KeepsItsFiles()
+    {
+        var a = await AddVault();
+        await Sender.Send(new CreateNote("Keep", "", "", a.Name));
+        await Sender.Send(new RemoveVault(a.Name));
+        Directory.CreateDirectory(Path.Combine(a.Root, ".templates"));
+        File.WriteAllText(Path.Combine(a.Root, ".templates", "daily.md"), "custom");
+
+        await Sender.Send(new CreateVault(new VaultConfigDto { VaultName = a.Name, VaultPath = a.Root }));
+
+        File.ReadAllText(Path.Combine(a.Root, ".templates", "daily.md")).Should().Be("custom");
+        Count(a.Name, "SELECT COUNT(*) FROM note").Should().Be(1);
+    }
+
+    [Fact]
+    public async Task CreateVault_NonEmptyNonVaultDirectory_IsRefused()
+    {
+        var root = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
+        _roots.Add(root);
+        File.WriteAllText(Path.Combine(root, "stuff.txt"), "x");
+
+        var act = async () => await Sender.Send(new CreateVault(new VaultConfigDto { VaultName = "mv-refused", VaultPath = root }));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*not empty*");
+        Directory.Exists(Path.Combine(root, ".templates")).Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task CreateVault_NameTakenAtOtherPath_IsRefusedWithoutScaffolding()
+    {
+        var a = await AddVault();
+        var other = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
+        _roots.Add(other);
+
+        var act = async () => await Sender.Send(new CreateVault(new VaultConfigDto { VaultName = a.Name, VaultPath = other }));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*already registered*");
+        Directory.Exists(Path.Combine(other, ".templates")).Should().BeFalse();
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("a/b")]
+    [InlineData("..")]
+    public async Task CreateVault_InvalidName_IsRefusedWithoutScaffolding(string name)
+    {
+        var root = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
+        _roots.Add(root);
+
+        var act = async () => await Sender.Send(new CreateVault(new VaultConfigDto { VaultName = name, VaultPath = root }));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*invalid vault name*");
+        Directory.Exists(Path.Combine(root, ".templates")).Should().BeFalse();
+    }
+
+    [Fact]
     public async Task SeveralVaults_WithoutHint_IsAmbiguous()
     {
         await AddVault();
