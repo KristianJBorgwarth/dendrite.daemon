@@ -1,4 +1,5 @@
 using Dendrite.Application.Abstractions;
+using Dendrite.Application.Vaults;
 using Dendrite.Domain.FileHandling;
 using Dendrite.Domain.Models;
 

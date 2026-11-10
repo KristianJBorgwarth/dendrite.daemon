@@ -14,7 +14,7 @@ internal sealed class TestVault : IDisposable
 
     public string Root { get; } = Directory.CreateTempSubdirectory("dendrite-vault-").FullName;
 
-    public ISender Sender => _services.GetRequiredService<ISender>();
+    public VaultDispatcher Sender => _services.GetRequiredService<VaultDispatcher>();
 
     public T Get<T>() where T : notnull => _services.GetRequiredService<T>();
 

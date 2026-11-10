@@ -1,5 +1,6 @@
 using Dendrite.Application;
 using Dendrite.Application.Abstractions;
+using Dendrite.Application.Vaults;
 
 namespace Dendrite.Infrastructure.FileSystem;
 

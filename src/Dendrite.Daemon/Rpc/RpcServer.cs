@@ -16,9 +16,9 @@ public sealed class RpcServer
     private delegate Task<string> MethodHandler(JsonElement? parameters, CancellationToken ct);
 
     private readonly Dictionary<string, MethodHandler> _methods = [];
-    private readonly ISender _sender;
+    private readonly VaultDispatcher _sender;
 
-    public RpcServer(ISender sender)
+    public RpcServer(VaultDispatcher sender)
     {
         _sender = sender;
     }

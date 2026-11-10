@@ -23,3 +23,7 @@ dotnet publish src/Dendrite.Daemon -c Release -r linux-x64 -o out
 ## RPC methods
 
 `vault/init`, `vault/rebuild`, `note/create|save|delete|goto|backlinks|search_by_tag|search_by_cf`, `completion/tag|slug`, `diagnostics/links`.
+
+### Multiple vaults
+
+Call `vault/init` once per vault; the vault name is its identity. Every other method accepts an optional `vault` param. When omitted, the vault is inferred from the request's `path` (longest matching vault root), then falls back to the only registered vault. With several vaults and no hint the call fails with an ambiguity error. Re-initialising a vault at the same path is idempotent; the same name at another path is rejected.
