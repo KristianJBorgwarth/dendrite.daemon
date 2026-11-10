@@ -42,6 +42,19 @@ public sealed class Database : IIndexDatabase, IDisposable
         _indexes[vaultName] = index;
     }
 
+    public void Close(string vaultName)
+    {
+        if (_indexes.Remove(vaultName, out var index))
+            index.Dispose();
+    }
+
+    public long CountNotes(string vaultName)
+    {
+        using var cmd = For(vaultName).Connection.CreateCommand();
+        cmd.CommandText = "SELECT COUNT(*) FROM note";
+        return (long)cmd.ExecuteScalar()!;
+    }
+
     /// <summary>The connection of a specific vault, regardless of the current selection.</summary>
     public SqliteConnection ConnectionFor(string vaultName) => For(vaultName).Connection;
 

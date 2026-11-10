@@ -28,7 +28,7 @@ public sealed class VaultRegistry
         return true;
     }
 
-    public void Remove(string name) => _vaults.Remove(name);
+    public bool Remove(string name) => _vaults.Remove(name);
 
     /// <summary>Picks the vault by explicit name, then by the vault root containing the path, then the only vault.</summary>
     public VaultConfig Resolve(string? vault, string? path)

@@ -1,4 +1,5 @@
 using AwesomeAssertions;
+using Dendrite.Application;
 using Dendrite.Application.Features.Notes;
 using Dendrite.Application.Features.Vault;
 using Dendrite.Infrastructure.Persistence;
@@ -71,6 +72,55 @@ public sealed class MultiVaultTests : IDisposable
 
         Count(a.Name, "SELECT COUNT(*) FROM note").Should().Be(0);
         Count(b.Name, "SELECT COUNT(*) FROM note").Should().Be(1);
+    }
+
+    [Fact]
+    public async Task ListVaults_ReturnsNameRootAndNoteCount()
+    {
+        var a = await AddVault();
+        var b = await AddVault();
+        await Sender.Send(new CreateNote("One", "", "", b.Name));
+
+        var vaults = await Sender.Send(new ListVaults());
+
+        vaults.Should().BeEquivalentTo([
+            new VaultInfoDto(a.Name, a.Root, 0),
+            new VaultInfoDto(b.Name, b.Root, 1),
+        ]);
+    }
+
+    [Fact]
+    public async Task RemoveVault_UnregistersAndLeavesIndexOnDisk()
+    {
+        var a = await AddVault();
+        var b = await AddVault();
+
+        await Sender.Send(new RemoveVault(a.Name));
+
+        (await Sender.Send(new ListVaults())).Select(v => v.Name).Should().Equal(b.Name);
+        File.Exists(Database.IndexPathForVault(a.Name)).Should().BeTrue();
+        var act = async () => await Sender.Send(new RebuildIndex(a.Name));
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*unknown vault*");
+    }
+
+    [Fact]
+    public async Task RemoveVault_LeavesRemainingVaultAsDefault()
+    {
+        var a = await AddVault();
+        var b = await AddVault();
+
+        await Sender.Send(new RemoveVault(a.Name));
+        var path = await Sender.Send(new CreateNote("Now Default", "", ""));
+
+        path.Should().Be(Path.Combine(b.Root, "now-default.md"));
+    }
+
+    [Fact]
+    public async Task RemoveUnknownVault_Throws()
+    {
+        var act = async () => await Sender.Send(new RemoveVault("nope"));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*unknown vault 'nope'*");
     }
 
     [Fact]

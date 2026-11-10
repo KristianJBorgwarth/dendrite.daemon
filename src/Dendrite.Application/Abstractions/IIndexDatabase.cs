@@ -4,4 +4,9 @@ namespace Dendrite.Application.Abstractions;
 public interface IIndexDatabase
 {
     void Open(string vaultName);
+
+    /// <summary>Closes the vault's index. The file stays on disk.</summary>
+    void Close(string vaultName);
+
+    long CountNotes(string vaultName);
 }
