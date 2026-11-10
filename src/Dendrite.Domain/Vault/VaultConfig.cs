@@ -29,4 +29,7 @@ public sealed record VaultConfig
 
     public IReadOnlyList<string> EffectiveExcludes =>
         OverrideDefaultIgnores ? ExcludeIndexFiles : [.. DefaultIgnores, .. ExcludeIndexFiles];
+
+    public VaultConfig WithPath(string vaultPath) =>
+        new(VaultName, vaultPath, TemplatesDir, ExcludeIndexFiles, OverrideDefaultIgnores, DailyNotes);
 }

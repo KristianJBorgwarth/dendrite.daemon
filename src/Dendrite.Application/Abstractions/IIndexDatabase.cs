@@ -9,4 +9,7 @@ public interface IIndexDatabase
     void Close(string vaultName);
 
     long CountNotes(string vaultName);
+
+    /// <summary>Rewrites the stored note paths of a vault after its folder moved, keeping the rest of the index.</summary>
+    void RelocateNotes(string vaultName, string oldRoot, string newRoot);
 }

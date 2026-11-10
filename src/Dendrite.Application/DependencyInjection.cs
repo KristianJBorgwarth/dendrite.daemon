@@ -15,6 +15,7 @@ public static class DependencyInjection
         services.AddSingleton<TemplateRenderer>();
         services.AddSingleton<VaultInitializer>();
         services.AddSingleton<VaultRestorer>();
+        services.AddSingleton<VaultRelocator>();
         return services;
     }
 }

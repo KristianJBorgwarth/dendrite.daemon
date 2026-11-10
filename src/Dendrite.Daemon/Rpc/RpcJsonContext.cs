@@ -29,6 +29,8 @@ public sealed class RpcRequest
 [JsonSerializable(typeof(CreateVault))]
 [JsonSerializable(typeof(RemoveVault))]
 [JsonSerializable(typeof(UseVault))]
+[JsonSerializable(typeof(RelocateVault))]
+[JsonSerializable(typeof(OpenVault))]
 [JsonSerializable(typeof(List<VaultInfoDto>))]
 [JsonSerializable(typeof(CreateNote))]
 [JsonSerializable(typeof(SaveNote))]

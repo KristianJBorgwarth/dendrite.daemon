@@ -21,6 +21,7 @@ public static class DependencyInjection
         services.AddSingleton<IVaultFiles, VaultFiles>();
         services.AddSingleton<IVaultScaffolder, VaultScaffolder>();
         services.AddSingleton<IVaultCatalog, VaultCatalog>();
+        services.AddSingleton<IVaultManifest, VaultManifest>();
         return services;
     }
 }

@@ -11,12 +11,18 @@ public sealed class CreateVaultHandler : ICommandHandler<CreateVault, Unit>
     private readonly VaultInitializer _initializer;
     private readonly IVaultScaffolder _scaffolder;
     private readonly VaultRegistry _registry;
+    private readonly IVaultManifest _manifest;
 
-    public CreateVaultHandler(VaultInitializer initializer, IVaultScaffolder scaffolder, VaultRegistry registry)
+    public CreateVaultHandler(
+        VaultInitializer initializer,
+        IVaultScaffolder scaffolder,
+        VaultRegistry registry,
+        IVaultManifest manifest)
     {
         _initializer = initializer;
         _scaffolder = scaffolder;
         _registry = registry;
+        _manifest = manifest;
     }
 
     public ValueTask<Unit> Handle(CreateVault command, CancellationToken cancellationToken)
@@ -30,6 +36,7 @@ public sealed class CreateVaultHandler : ICommandHandler<CreateVault, Unit>
                 $"'{config.VaultPath}' is not empty and is not a vault — refusing to create one there");
 
         _scaffolder.Scaffold(config);
+        _manifest.Write(config);
         _initializer.Initialize(config, activate: true);
         return ValueTask.FromResult(Unit.Value);
     }

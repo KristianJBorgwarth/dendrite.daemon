@@ -57,6 +57,16 @@ public sealed class Database : IIndexDatabase, IDisposable
         return (long)cmd.ExecuteScalar()!;
     }
 
+    public void RelocateNotes(string vaultName, string oldRoot, string newRoot)
+    {
+        using var cmd = For(vaultName).Connection.CreateCommand();
+        cmd.CommandText = "UPDATE note SET path = @newRoot || substr(path, length(@oldRoot) + 1) WHERE substr(path, 1, length(@oldRoot) + 1) = @oldPrefix";
+        cmd.Parameters.AddWithValue("@newRoot", newRoot);
+        cmd.Parameters.AddWithValue("@oldRoot", oldRoot);
+        cmd.Parameters.AddWithValue("@oldPrefix", oldRoot + "/");
+        cmd.ExecuteNonQuery();
+    }
+
     /// <summary>The connection of a specific vault, regardless of the current selection.</summary>
     public SqliteConnection ConnectionFor(string vaultName) => For(vaultName).Connection;
 
