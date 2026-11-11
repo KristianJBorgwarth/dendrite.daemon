@@ -7,6 +7,4 @@ public interface IVaultManifest
     VaultConfig? Read(string vaultPath);
 
     void Write(VaultConfig config);
-
-    string? FindRoot(string path);
 }

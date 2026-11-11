@@ -25,21 +25,6 @@ internal sealed class VaultManifest : IVaultManifest
         return VaultInitializer.ToConfig(dto.WithPath(vaultPath).WithDefaults());
     }
 
-    public string? FindRoot(string path)
-    {
-        var dir = new DirectoryInfo(Path.GetFullPath(path));
-        if (!dir.Exists)
-            dir = dir.Parent;
-
-        for (; dir is not null; dir = dir.Parent)
-        {
-            if (File.Exists(FilePath(dir.FullName)))
-                return dir.FullName;
-        }
-
-        return null;
-    }
-
     public void Write(VaultConfig config)
     {
         var dto = new VaultConfigDto

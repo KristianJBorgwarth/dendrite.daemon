@@ -331,23 +331,6 @@ public sealed class MultiVaultTests : IDisposable
     }
 
     [Fact]
-    public async Task TouchingAFileInAMovedVault_RepointsItAutomatically()
-    {
-        var a = await AddVault();
-        var moved = Move(a.Root);
-
-        using var restarted = Composition.BuildServices(_catalog);
-        restarted.GetRequiredService<VaultRestorer>().Restore();
-        var sender = restarted.GetRequiredService<VaultDispatcher>();
-
-        (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Missing.Should().BeTrue();
-
-        await sender.Send(new GetBacklinks(Path.Combine(moved, "x.md")));
-
-        (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Path.Should().Be(moved);
-    }
-
-    [Fact]
     public async Task OpenVault_RegistersACreatedVaultFromItsManifest()
     {
         var root = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;

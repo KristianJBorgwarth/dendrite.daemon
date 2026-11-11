@@ -56,9 +56,6 @@ public sealed class VaultRegistry
         _vaults[config.VaultName] = config;
     }
 
-    public VaultConfig? FindByPath(string vaultPath) =>
-        _vaults.Values.FirstOrDefault(v => v.VaultPath == vaultPath);
-
     public bool CheckAvailability(VaultConfig config)
     {
         if (!_vaults.TryGetValue(config.VaultName, out var existing))
@@ -70,8 +67,6 @@ public sealed class VaultRegistry
 
         return true;
     }
-
-    public bool Owns(string path) => Owner(System.IO.Path.GetFullPath(path)) is not null;
 
     private VaultConfig? Owner(string fullPath) => _vaults.Values
         .Where(v => IsInside(v.VaultPath, fullPath))

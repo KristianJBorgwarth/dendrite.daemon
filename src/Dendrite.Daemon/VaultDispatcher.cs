@@ -1,6 +1,3 @@
-using Dendrite.Application;
-using Dendrite.Application.Abstractions;
-using Dendrite.Application.Services;
 using Dendrite.Application.Vaults;
 using Mediator;
 
@@ -11,21 +8,12 @@ public sealed class VaultDispatcher
     private readonly ISender _sender;
     private readonly VaultRegistry _registry;
     private readonly VaultContext _context;
-    private readonly IVaultManifest _manifest;
-    private readonly VaultOpener _opener;
 
-    public VaultDispatcher(
-        ISender sender,
-        VaultRegistry registry,
-        VaultContext context,
-        IVaultManifest manifest,
-        VaultOpener opener)
+    public VaultDispatcher(ISender sender, VaultRegistry registry, VaultContext context)
     {
         _sender = sender;
         _registry = registry;
         _context = context;
-        _manifest = manifest;
-        _opener = opener;
     }
 
     public ValueTask<TResponse> Send<TResponse>(ICommand<TResponse> command, CancellationToken ct = default)
@@ -46,25 +34,6 @@ public sealed class VaultDispatcher
             return;
 
         var path = (request as IVaultPathRequest)?.Path;
-        if (string.IsNullOrEmpty(vaultRequest.Vault))
-            AdoptVaultAround(path);
-
         _context.Select(_registry.Resolve(vaultRequest.Vault, path));
-    }
-
-    private void AdoptVaultAround(string? path)
-    {
-        if (string.IsNullOrEmpty(path) || _registry.Owns(path))
-            return;
-
-        try
-        {
-            if (_manifest.FindRoot(path) is { } root)
-                _opener.Open(root, activate: false);
-        }
-        catch (Exception ex)
-        {
-            Log.Warn($"could not open the vault around '{path}': {ex.Message}");
-        }
     }
 }
