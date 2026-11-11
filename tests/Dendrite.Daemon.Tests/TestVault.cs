@@ -9,7 +9,7 @@ namespace Dendrite.Daemon.Tests;
 /// <summary>An isolated vault directory plus index database, wired through the real service graph.</summary>
 internal sealed class TestVault : IDisposable
 {
-    private readonly ServiceProvider _services = Composition.BuildServices();
+    private readonly ServiceProvider _services = Composition.BuildServices(new InMemoryVaultCatalog());
     private readonly string _vaultName = $"test-{Guid.NewGuid():N}";
 
     public string Root { get; } = Directory.CreateTempSubdirectory("dendrite-vault-").FullName;

@@ -9,6 +9,21 @@ public sealed class VaultRegistry
 
     public IReadOnlyCollection<VaultConfig> All => _vaults.Values;
 
+    /// <summary>The vault requests fall back to when they name none and no path places them in one.</summary>
+    public string? Active { get; private set; }
+
+    public bool Contains(string name) => _vaults.ContainsKey(name);
+
+    public void Use(string name)
+    {
+        if (!_vaults.ContainsKey(name))
+            throw new InvalidOperationException($"unknown vault '{name}'");
+
+        Active = name;
+    }
+
+    public VaultCatalogState ToState() => new() { Active = Active, Vaults = [.. _vaults.Values] };
+
     /// <summary>Adds or replaces a vault. Returns true when the vault was not registered before.</summary>
     public bool Register(VaultConfig config)
     {
@@ -28,7 +43,13 @@ public sealed class VaultRegistry
         return true;
     }
 
-    public bool Remove(string name) => _vaults.Remove(name);
+    public bool Remove(string name)
+    {
+        if (Active == name)
+            Active = null;
+
+        return _vaults.Remove(name);
+    }
 
     /// <summary>True when the vault is already registered at the same path; throws when the name belongs to another path.</summary>
     public bool CheckAvailability(VaultConfig config)
@@ -43,7 +64,7 @@ public sealed class VaultRegistry
         return true;
     }
 
-    /// <summary>Picks the vault by explicit name, then by the vault root containing the path, then the only vault.</summary>
+    /// <summary>Picks the vault by explicit name, then by the vault root containing the path, then the active vault, then the only vault.</summary>
     public VaultConfig Resolve(string? vault, string? path)
     {
         if (!string.IsNullOrEmpty(vault))
@@ -63,6 +84,9 @@ public sealed class VaultRegistry
             if (owner is not null)
                 return owner;
         }
+
+        if (Active is not null && _vaults.TryGetValue(Active, out var active))
+            return active;
 
         return _vaults.Count switch
         {

@@ -30,7 +30,7 @@ public sealed class CreateVaultHandler : ICommandHandler<CreateVault, Unit>
                 $"'{config.VaultPath}' is not empty and is not a vault — refusing to create one there");
 
         _scaffolder.Scaffold(config);
-        _initializer.Initialize(config);
+        _initializer.Initialize(config, activate: true);
         return ValueTask.FromResult(Unit.Value);
     }
 }

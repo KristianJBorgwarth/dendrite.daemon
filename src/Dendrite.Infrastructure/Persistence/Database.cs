@@ -21,14 +21,16 @@ public sealed class Database : IIndexDatabase, IDisposable
 
     private VaultIndex Current => For(_context.Config.VaultName);
 
-    public static string IndexPathForVault(string vaultName)
+    public static string DataRoot()
     {
         var dataHome = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
         if (string.IsNullOrEmpty(dataHome))
             dataHome = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".local", "share");
 
-        return Path.Combine(dataHome, "dendrite", vaultName, "index.db");
+        return Path.Combine(dataHome, "dendrite");
     }
+
+    public static string IndexPathForVault(string vaultName) => Path.Combine(DataRoot(), vaultName, "index.db");
 
     public void Open(string vaultName) => Initialize(vaultName, IndexPathForVault(vaultName));
 

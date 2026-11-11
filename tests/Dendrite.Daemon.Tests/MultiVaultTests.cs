@@ -2,6 +2,7 @@ using AwesomeAssertions;
 using Dendrite.Application;
 using Dendrite.Application.Features.Notes;
 using Dendrite.Application.Features.Vault;
+using Dendrite.Application.Services;
 using Dendrite.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,9 +11,15 @@ namespace Dendrite.Daemon.Tests;
 
 public sealed class MultiVaultTests : IDisposable
 {
-    private readonly ServiceProvider _services = Composition.BuildServices();
+    private readonly InMemoryVaultCatalog _catalog = new();
+    private readonly ServiceProvider _services;
     private readonly List<string> _names = [];
     private readonly List<string> _roots = [];
+
+    public MultiVaultTests()
+    {
+        _services = Composition.BuildServices(_catalog);
+    }
 
     private VaultDispatcher Sender => _services.GetRequiredService<VaultDispatcher>();
 
@@ -84,8 +91,8 @@ public sealed class MultiVaultTests : IDisposable
         var vaults = await Sender.Send(new ListVaults());
 
         vaults.Should().BeEquivalentTo([
-            new VaultInfoDto(a.Name, a.Root, 0),
-            new VaultInfoDto(b.Name, b.Root, 1),
+            new VaultInfoDto(a.Name, a.Root, 0, false),
+            new VaultInfoDto(b.Name, b.Root, 1, false),
         ]);
     }
 
@@ -247,6 +254,46 @@ public sealed class MultiVaultTests : IDisposable
         var act = async () => await AddVault(name);
 
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*invalid vault name*");
+    }
+
+    [Fact]
+    public async Task RestoredVaults_ComeBackAfterRestart()
+    {
+        var a = await AddVault();
+
+        using var restarted = Composition.BuildServices(_catalog);
+        restarted.GetRequiredService<VaultRestorer>().Restore();
+
+        var vaults = await restarted.GetRequiredService<VaultDispatcher>().Send(new ListVaults());
+        vaults.Should().Contain(v => v.Name == a.Name && v.Path == a.Root);
+    }
+
+    [Fact]
+    public async Task UseVault_MakesItTheFallbackAndSurvivesRestart()
+    {
+        var a = await AddVault();
+        var b = await AddVault();
+
+        await Sender.Send(new UseVault(b.Name));
+        var path = await Sender.Send(new CreateNote("Fallback", "", ""));
+
+        path.Should().StartWith(b.Root);
+        (await Sender.Send(new ListVaults())).Single(v => v.Active).Name.Should().Be(b.Name);
+
+        using var restarted = Composition.BuildServices(_catalog);
+        restarted.GetRequiredService<VaultRestorer>().Restore();
+
+        var vaults = await restarted.GetRequiredService<VaultDispatcher>().Send(new ListVaults());
+        vaults.Should().Contain(v => v.Name == a.Name && v.Path == a.Root && !v.Active);
+        vaults.Should().Contain(v => v.Name == b.Name && v.Path == b.Root && v.Active);
+    }
+
+    [Fact]
+    public async Task UseUnknownVault_Throws()
+    {
+        var act = async () => await Sender.Send(new UseVault("nope"));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*unknown vault*");
     }
 
     public void Dispose()
