@@ -1,7 +1,7 @@
 using Dendrite.Application.Abstractions;
 using Dendrite.Application.Vaults;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Integration;
 
 public sealed class InMemoryVaultCatalog : IVaultCatalog
 {

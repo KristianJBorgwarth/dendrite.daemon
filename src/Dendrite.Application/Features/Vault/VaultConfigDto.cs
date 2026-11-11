@@ -21,18 +21,22 @@ public sealed class VaultConfigDto
         DailyNotes = DailyNotes,
     };
 
-    public VaultConfigDto WithDefaults() => new()
+    public VaultConfigDto WithDefaults()
     {
-        VaultName = VaultName,
-        VaultPath = VaultPath,
-        TemplatesDir = string.IsNullOrEmpty(TemplatesDir) ? "/.templates" : TemplatesDir,
-        ExcludeIndexFiles = ExcludeIndexFiles,
-        OverrideDefaultIgnores = OverrideDefaultIgnores,
-        DailyNotes = new DailyNotesConfig
+        var daily = DailyNotes ?? new DailyNotesConfig();
+        return new VaultConfigDto
         {
-            Dir = string.IsNullOrEmpty(DailyNotes.Dir) ? "/daily" : DailyNotes.Dir,
-            FilenameFormat = string.IsNullOrEmpty(DailyNotes.FilenameFormat) ? "%Y-%m-%d.md" : DailyNotes.FilenameFormat,
-            TemplateName = string.IsNullOrEmpty(DailyNotes.TemplateName) ? "daily" : DailyNotes.TemplateName,
-        },
-    };
+            VaultName = VaultName,
+            VaultPath = VaultPath,
+            TemplatesDir = string.IsNullOrEmpty(TemplatesDir) ? "/.templates" : TemplatesDir,
+            ExcludeIndexFiles = ExcludeIndexFiles,
+            OverrideDefaultIgnores = OverrideDefaultIgnores,
+            DailyNotes = new DailyNotesConfig
+            {
+                Dir = string.IsNullOrEmpty(daily.Dir) ? "/daily" : daily.Dir,
+                FilenameFormat = string.IsNullOrEmpty(daily.FilenameFormat) ? "%Y-%m-%d.md" : daily.FilenameFormat,
+                TemplateName = string.IsNullOrEmpty(daily.TemplateName) ? "daily" : daily.TemplateName,
+            },
+        };
+    }
 }

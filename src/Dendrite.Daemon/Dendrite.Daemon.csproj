@@ -28,7 +28,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <InternalsVisibleTo Include="Dendrite.Daemon.Tests" />
+    <InternalsVisibleTo Include="Dendrite.Test.Integration" />
   </ItemGroup>
 
 </Project>

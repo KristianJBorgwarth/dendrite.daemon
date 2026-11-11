@@ -4,11 +4,12 @@ using Dendrite.Application.Features.Notes;
 using Dendrite.Application.Features.Vault;
 using Dendrite.Application.Services;
 using Dendrite.Application.Vaults;
+using Dendrite.Daemon;
 using Dendrite.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Integration;
 
 public sealed class MultiVaultTests : IDisposable
 {

@@ -1,7 +1,7 @@
 using AwesomeAssertions;
 using Dendrite.Domain.FileHandling;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Unit;
 
 public class FrontMatterTests
 {

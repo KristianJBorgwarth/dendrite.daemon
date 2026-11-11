@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}-${{ matrix.arch }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix:
+        include:
+          - { os: linux, arch: amd64, rid: linux-x64, runner: ubuntu-latest }
+          - { os: linux, arch: arm64, rid: linux-arm64, runner: ubuntu-24.04-arm }
+          - { os: darwin, arch: amd64, rid: osx-x64, runner: macos-15-intel }
+          - { os: darwin, arch: arm64, rid: osx-arm64, runner: macos-latest }
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Publish
+        run: |
+          dotnet publish src/Dendrite.Daemon -c Release -r ${{ matrix.rid }} \
+            -p:Version=${GITHUB_REF_NAME#v} -o out
+          mv out/dendrite dendrite-${{ matrix.os }}-${{ matrix.arch }}
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dendrite-${{ matrix.os }}-${{ matrix.arch }}
+          path: dendrite-${{ matrix.os }}-${{ matrix.arch }}
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dendrite-*
+          generate_release_notes: true

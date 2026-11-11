@@ -4,7 +4,7 @@ using Dendrite.Application.Features.Diagnostics;
 using Dendrite.Application.Features.Notes;
 using Dendrite.Application.Features.Vault;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Integration;
 
 public class NoteHandlerTests
 {
