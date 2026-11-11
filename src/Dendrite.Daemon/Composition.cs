@@ -38,7 +38,6 @@ public static class Composition
             .Query("vault/list", ctx.ListVaults, ctx.ListVaultInfoDto)
             .Command("vault/remove", ctx.RemoveVault)
             .Command("vault/use", ctx.UseVault)
-            .Command("vault/relocate", ctx.RelocateVault)
             .Command("vault/open", ctx.OpenVault)
             .Command("note/create", ctx.CreateNote, ctx.String)
             .Command("note/save", ctx.SaveNote)

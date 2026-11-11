@@ -26,10 +26,14 @@ public sealed class VaultRestorer
             try
             {
                 if (!Directory.Exists(config.VaultPath))
-                    Log.Warn($"vault '{config.VaultName}' points at {config.VaultPath}, which does not exist — relocate it");
+                {
+                    Log.Warn($"vault '{config.VaultName}' points at {config.VaultPath}, which does not exist — open its new folder to repair it");
+                    _registry.Register(config);
+                    continue;
+                }
 
                 _registry.Register(config);
-                _indexes.Open(config.VaultName);
+                _indexes.Open(config.VaultName, config.VaultPath);
             }
             catch (Exception ex)
             {

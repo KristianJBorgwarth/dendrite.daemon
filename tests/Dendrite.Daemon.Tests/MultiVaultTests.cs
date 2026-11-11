@@ -106,7 +106,7 @@ public sealed class MultiVaultTests : IDisposable
         await Sender.Send(new RemoveVault(a.Name));
 
         (await Sender.Send(new ListVaults())).Select(v => v.Name).Should().Equal(b.Name);
-        File.Exists(Database.IndexPathForVault(a.Name)).Should().BeTrue();
+        File.Exists(Database.IndexPath(a.Root)).Should().BeTrue();
         var act = async () => await Sender.Send(new RebuildIndex(a.Name));
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*unknown vault*");
     }
@@ -315,13 +315,13 @@ public sealed class MultiVaultTests : IDisposable
     }
 
     [Fact]
-    public async Task Relocate_KeepsTheIndexAndRewritesNotePaths()
+    public async Task OpenMovedFolder_KeepsTheIndexAndRewritesNotePaths()
     {
         var a = await AddVault();
         await Sender.Send(new CreateNote("Moves With Me", "", "", a.Name));
         var moved = Move(a.Root);
 
-        await Sender.Send(new RelocateVault(a.Name, moved));
+        await Sender.Send(new OpenVault(moved));
 
         NotePath(a.Name).Should().StartWith(moved + "/");
         Count(a.Name, "SELECT COUNT(*) FROM note").Should().Be(1);
@@ -331,18 +331,7 @@ public sealed class MultiVaultTests : IDisposable
     }
 
     [Fact]
-    public async Task Relocate_ToAnotherVaultsFolder_IsRefused()
-    {
-        var a = await AddVault();
-        var b = await AddVault();
-
-        var act = async () => await Sender.Send(new RelocateVault(a.Name, b.Root));
-
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*already belongs to*");
-    }
-
-    [Fact]
-    public async Task VaultWhoseFolderMoved_StaysRegisteredAsMissingUntilRelocated()
+    public async Task TouchingAFileInAMovedVault_RepointsItAutomatically()
     {
         var a = await AddVault();
         var moved = Move(a.Root);
@@ -353,9 +342,9 @@ public sealed class MultiVaultTests : IDisposable
 
         (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Missing.Should().BeTrue();
 
-        await sender.Send(new RelocateVault(a.Name, moved));
+        await sender.Send(new GetBacklinks(Path.Combine(moved, "x.md")));
 
-        (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Missing.Should().BeFalse();
+        (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Path.Should().Be(moved);
     }
 
     [Fact]
@@ -396,27 +385,11 @@ public sealed class MultiVaultTests : IDisposable
         (await Sender.Send(new ListVaults())).Single(v => v.Name == name).Path.Should().Be(moved);
     }
 
-    [Fact]
-    public async Task OpenVault_WithoutManifest_Throws()
-    {
-        var a = await AddVault();
-
-        var act = async () => await Sender.Send(new OpenVault(a.Root));
-
-        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*vault.json*");
-    }
-
     public void Dispose()
     {
         _services.Dispose();
         SqliteConnection.ClearAllPools();
         foreach (var root in _roots)
             Directory.Delete(root, recursive: true);
-        foreach (var name in _names)
-        {
-            var dir = Path.GetDirectoryName(Database.IndexPathForVault(name))!;
-            if (name.StartsWith("mv-", StringComparison.Ordinal) && Directory.Exists(dir))
-                Directory.Delete(dir, recursive: true);
-        }
     }
 }

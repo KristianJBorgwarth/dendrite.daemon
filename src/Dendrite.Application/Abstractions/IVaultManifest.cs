@@ -9,4 +9,7 @@ public interface IVaultManifest
     VaultConfig? Read(string vaultPath);
 
     void Write(VaultConfig config);
+
+    /// <summary>The nearest folder at or above the path that holds a manifest, or null.</summary>
+    string? FindRoot(string path);
 }

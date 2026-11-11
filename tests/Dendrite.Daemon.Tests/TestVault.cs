@@ -61,8 +61,5 @@ internal sealed class TestVault : IDisposable
         _services.Dispose();
         SqliteConnection.ClearAllPools();
         Directory.Delete(Root, recursive: true);
-        var dbDir = Path.GetDirectoryName(Database.IndexPathForVault(_vaultName))!;
-        if (Directory.Exists(dbDir))
-            Directory.Delete(dbDir, recursive: true);
     }
 }

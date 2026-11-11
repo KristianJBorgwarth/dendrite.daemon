@@ -77,6 +77,14 @@ public sealed class VaultRegistry
         return true;
     }
 
+    /// <summary>True when the path lies inside a registered vault.</summary>
+    public bool Owns(string path) => Owner(System.IO.Path.GetFullPath(path)) is not null;
+
+    private VaultConfig? Owner(string fullPath) => _vaults.Values
+        .Where(v => IsInside(v.VaultPath, fullPath))
+        .OrderByDescending(v => v.VaultPath.Length)
+        .FirstOrDefault();
+
     /// <summary>Picks the vault by explicit name, then by the vault root containing the path, then the active vault, then the only vault.</summary>
     public VaultConfig Resolve(string? vault, string? path)
     {
@@ -89,11 +97,7 @@ public sealed class VaultRegistry
 
         if (!string.IsNullOrEmpty(path))
         {
-            var full = System.IO.Path.GetFullPath(path);
-            var owner = _vaults.Values
-                .Where(v => IsInside(v.VaultPath, full))
-                .OrderByDescending(v => v.VaultPath.Length)
-                .FirstOrDefault();
+            var owner = Owner(System.IO.Path.GetFullPath(path));
             if (owner is not null)
                 return owner;
         }
