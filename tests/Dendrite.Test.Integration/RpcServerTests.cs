@@ -3,7 +3,7 @@ using AwesomeAssertions;
 using Dendrite.Daemon.Rpc;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Integration;
 
 public class RpcServerTests
 {

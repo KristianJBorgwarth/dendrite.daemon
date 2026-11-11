@@ -6,6 +6,7 @@
     <Project Path="src/Dendrite.Infrastructure/Dendrite.Infrastructure.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/Dendrite.Daemon.Tests/Dendrite.Daemon.Tests.csproj" />
+    <Project Path="tests/Dendrite.Test.Unit/Dendrite.Test.Unit.csproj" />
+    <Project Path="tests/Dendrite.Test.Integration/Dendrite.Test.Integration.csproj" />
   </Folder>
 </Solution>

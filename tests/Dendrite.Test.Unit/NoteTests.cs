@@ -2,7 +2,7 @@ using AwesomeAssertions;
 using Dendrite.Domain.FileHandling;
 using Dendrite.Domain.Models;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Unit;
 
 public class NoteTests
 {

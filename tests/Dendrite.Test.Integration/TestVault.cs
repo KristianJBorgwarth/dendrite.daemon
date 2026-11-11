@@ -1,10 +1,11 @@
 using Dendrite.Application.Features.Vault;
+using Dendrite.Daemon;
 using Dendrite.Infrastructure.Persistence;
 using Mediator;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Integration;
 
 internal sealed class TestVault : IDisposable
 {

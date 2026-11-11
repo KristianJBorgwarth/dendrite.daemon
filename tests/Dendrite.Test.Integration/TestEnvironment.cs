@@ -1,6 +1,6 @@
 using System.Runtime.CompilerServices;
 
-namespace Dendrite.Daemon.Tests;
+namespace Dendrite.Test.Integration;
 
 internal static class TestEnvironment
 {
