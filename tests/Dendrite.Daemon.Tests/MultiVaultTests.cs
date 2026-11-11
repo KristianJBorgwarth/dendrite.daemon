@@ -3,6 +3,7 @@ using Dendrite.Application;
 using Dendrite.Application.Features.Notes;
 using Dendrite.Application.Features.Vault;
 using Dendrite.Application.Services;
+using Dendrite.Application.Vaults;
 using Dendrite.Infrastructure.Persistence;
 using Microsoft.Data.Sqlite;
 using Microsoft.Extensions.DependencyInjection;
@@ -294,6 +295,115 @@ public sealed class MultiVaultTests : IDisposable
         var act = async () => await Sender.Send(new UseVault("nope"));
 
         await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*unknown vault*");
+    }
+
+    private string Move(string root)
+    {
+        var parent = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
+        var moved = Path.Combine(parent, "moved");
+        Directory.Move(root, moved);
+        _roots.Remove(root);
+        _roots.Add(parent);
+        return moved;
+    }
+
+    private string NotePath(string vault)
+    {
+        using var cmd = _services.GetRequiredService<Database>().ConnectionFor(vault).CreateCommand();
+        cmd.CommandText = "SELECT path FROM note LIMIT 1";
+        return (string)cmd.ExecuteScalar()!;
+    }
+
+    [Fact]
+    public async Task Relocate_KeepsTheIndexAndRewritesNotePaths()
+    {
+        var a = await AddVault();
+        await Sender.Send(new CreateNote("Moves With Me", "", "", a.Name));
+        var moved = Move(a.Root);
+
+        await Sender.Send(new RelocateVault(a.Name, moved));
+
+        NotePath(a.Name).Should().StartWith(moved + "/");
+        Count(a.Name, "SELECT COUNT(*) FROM note").Should().Be(1);
+        var info = (await Sender.Send(new ListVaults())).Single(v => v.Name == a.Name);
+        info.Path.Should().Be(moved);
+        info.Missing.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task Relocate_ToAnotherVaultsFolder_IsRefused()
+    {
+        var a = await AddVault();
+        var b = await AddVault();
+
+        var act = async () => await Sender.Send(new RelocateVault(a.Name, b.Root));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*already belongs to*");
+    }
+
+    [Fact]
+    public async Task VaultWhoseFolderMoved_StaysRegisteredAsMissingUntilRelocated()
+    {
+        var a = await AddVault();
+        var moved = Move(a.Root);
+
+        using var restarted = Composition.BuildServices(_catalog);
+        restarted.GetRequiredService<VaultRestorer>().Restore();
+        var sender = restarted.GetRequiredService<VaultDispatcher>();
+
+        (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Missing.Should().BeTrue();
+
+        await sender.Send(new RelocateVault(a.Name, moved));
+
+        (await sender.Send(new ListVaults())).Single(v => v.Name == a.Name).Missing.Should().BeFalse();
+    }
+
+    [Fact]
+    public async Task OpenVault_RegistersACreatedVaultFromItsManifest()
+    {
+        var root = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
+        _roots.Add(root);
+        var name = $"mv-{Guid.NewGuid():N}";
+        _names.Add(name);
+        await Sender.Send(new CreateVault(new VaultConfigDto
+        {
+            VaultName = name,
+            VaultPath = root,
+            DailyNotes = new DailyNotesConfig { Dir = "/logs" },
+        }));
+        await Sender.Send(new RemoveVault(name));
+
+        await Sender.Send(new OpenVault(root));
+
+        var info = (await Sender.Send(new ListVaults())).Single(v => v.Name == name);
+        info.Path.Should().Be(root);
+        info.Active.Should().BeTrue();
+        _services.GetRequiredService<VaultRegistry>().Resolve(name, null).DailyNotes.Dir.Should().Be("/logs");
+    }
+
+    [Fact]
+    public async Task OpenVault_AtANewFolder_RepointsTheVaultOfThatName()
+    {
+        var root = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
+        _roots.Add(root);
+        var name = $"mv-{Guid.NewGuid():N}";
+        _names.Add(name);
+        await Sender.Send(new CreateVault(new VaultConfigDto { VaultName = name, VaultPath = root }));
+        var moved = Move(root);
+
+        await Sender.Send(new OpenVault(moved));
+
+        (await Sender.Send(new ListVaults())).Single(v => v.Name == name).Path.Should().Be(moved);
+    }
+
+    [Fact]
+    public async Task OpenVault_WithoutManifest_Throws()
+    {
+        var a = await AddVault();
+
+        var act = async () => await Sender.Send(new OpenVault(a.Root));
+
+        await act.Should().ThrowAsync<InvalidOperationException>().WithMessage("*vault.json*");
     }
 
     public void Dispose()

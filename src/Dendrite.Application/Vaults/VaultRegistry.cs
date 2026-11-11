@@ -51,6 +51,19 @@ public sealed class VaultRegistry
         return _vaults.Remove(name);
     }
 
+    /// <summary>Points an already registered vault at a new folder.</summary>
+    public void Replace(VaultConfig config)
+    {
+        if (!_vaults.ContainsKey(config.VaultName))
+            throw new InvalidOperationException($"unknown vault '{config.VaultName}'");
+
+        _vaults[config.VaultName] = config;
+    }
+
+    /// <summary>The vault registered at exactly this folder, if any.</summary>
+    public VaultConfig? FindByPath(string vaultPath) =>
+        _vaults.Values.FirstOrDefault(v => v.VaultPath == vaultPath);
+
     /// <summary>True when the vault is already registered at the same path; throws when the name belongs to another path.</summary>
     public bool CheckAvailability(VaultConfig config)
     {

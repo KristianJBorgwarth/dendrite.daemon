@@ -11,6 +11,17 @@ public sealed class VaultConfigDto
     [JsonPropertyName("override_default_ignores")] public bool OverrideDefaultIgnores { get; init; }
     [JsonPropertyName("daily_notes")] public DailyNotesConfig DailyNotes { get; init; } = new();
 
+    /// <summary>The same settings for a vault that lives somewhere else.</summary>
+    public VaultConfigDto WithPath(string vaultPath) => new()
+    {
+        VaultName = VaultName,
+        VaultPath = vaultPath,
+        TemplatesDir = TemplatesDir,
+        ExcludeIndexFiles = ExcludeIndexFiles,
+        OverrideDefaultIgnores = OverrideDefaultIgnores,
+        DailyNotes = DailyNotes,
+    };
+
     /// <summary>Fills the settings a freshly created vault needs when the caller left them empty.</summary>
     public VaultConfigDto WithDefaults() => new()
     {

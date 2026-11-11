@@ -26,10 +26,7 @@ public sealed class VaultRestorer
             try
             {
                 if (!Directory.Exists(config.VaultPath))
-                {
-                    Log.Warn($"skipping vault '{config.VaultName}': {config.VaultPath} does not exist");
-                    continue;
-                }
+                    Log.Warn($"vault '{config.VaultName}' points at {config.VaultPath}, which does not exist — relocate it");
 
                 _registry.Register(config);
                 _indexes.Open(config.VaultName);
