@@ -22,7 +22,7 @@ dotnet publish src/Dendrite.Daemon -c Release -r linux-x64 -o out
 
 ## RPC methods
 
-`vault/init`, `vault/rebuild`, `vault/list`, `vault/remove`, `note/create|save|delete|goto|backlinks|search_by_tag|search_by_cf`, `completion/tag|slug`, `diagnostics/links`.
+`vault/init`, `vault/create`, `vault/rebuild`, `vault/list`, `vault/remove`, `note/create|save|delete|goto|backlinks|search_by_tag|search_by_cf`, `completion/tag|slug`, `diagnostics/links`.
 
 ### Multiple vaults
 

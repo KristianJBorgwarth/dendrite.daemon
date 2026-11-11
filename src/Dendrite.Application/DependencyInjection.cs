@@ -13,6 +13,7 @@ public static class DependencyInjection
         services.AddSingleton<VaultContext>();
         services.AddSingleton<IndexRebuilder>();
         services.AddSingleton<TemplateRenderer>();
+        services.AddSingleton<VaultInitializer>();
         return services;
     }
 }
