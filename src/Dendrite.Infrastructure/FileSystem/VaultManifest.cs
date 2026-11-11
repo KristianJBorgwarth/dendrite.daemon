@@ -44,5 +44,6 @@ internal sealed class VaultManifest : IVaultManifest
         var file = FilePath(config.VaultPath);
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         File.WriteAllText(file, JsonSerializer.Serialize(dto, ManifestJsonContext.Default.VaultConfigDto));
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(file)!, ".gitignore"), "index.db*\n");
     }
 }

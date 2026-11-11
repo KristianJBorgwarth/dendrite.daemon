@@ -8,20 +8,23 @@ public sealed class VaultRestorer
     private readonly IVaultCatalog _catalog;
     private readonly VaultRegistry _registry;
     private readonly IIndexDatabase _indexes;
+    private readonly IVaultManifest _manifest;
 
-    public VaultRestorer(IVaultCatalog catalog, VaultRegistry registry, IIndexDatabase indexes)
+    public VaultRestorer(IVaultCatalog catalog, VaultRegistry registry, IIndexDatabase indexes, IVaultManifest manifest)
     {
         _catalog = catalog;
         _registry = registry;
         _indexes = indexes;
+        _manifest = manifest;
     }
 
     public void Restore()
     {
         var state = _catalog.Load();
 
-        foreach (var config in state.Vaults)
+        foreach (var remembered in state.Vaults)
         {
+            var config = remembered;
             try
             {
                 if (!Directory.Exists(config.VaultPath))
@@ -31,6 +34,7 @@ public sealed class VaultRestorer
                     continue;
                 }
 
+                config = _manifest.Read(config.VaultPath) ?? config;
                 _registry.Register(config);
                 _indexes.Open(config.VaultName, config.VaultPath);
             }

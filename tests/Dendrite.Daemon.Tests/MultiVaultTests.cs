@@ -331,6 +331,20 @@ public sealed class MultiVaultTests : IDisposable
     }
 
     [Fact]
+    public async Task EditedManifest_WinsOnRestart()
+    {
+        var a = await AddVault();
+        await File.WriteAllTextAsync(
+            Path.Combine(a.Root, ".dendrite", "vault.json"),
+            $$"""{"vault_name":"{{a.Name}}","templates_dir":"/.templates","daily_notes":{"dir":"/journal"} }""");
+
+        using var restarted = Composition.BuildServices(_catalog);
+        restarted.GetRequiredService<VaultRestorer>().Restore();
+
+        restarted.GetRequiredService<VaultRegistry>().Resolve(a.Name, null).DailyNotes.Dir.Should().Be("/journal");
+    }
+
+    [Fact]
     public async Task OpenVault_RegistersACreatedVaultFromItsManifest()
     {
         var root = Directory.CreateTempSubdirectory("dendrite-mv-").FullName;
