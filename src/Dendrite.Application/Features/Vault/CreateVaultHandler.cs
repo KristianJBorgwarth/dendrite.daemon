@@ -5,7 +5,6 @@ using Mediator;
 
 namespace Dendrite.Application.Features.Vault;
 
-/// <summary>Scaffolds a new vault, registers it and builds its first index.</summary>
 public sealed class CreateVaultHandler : ICommandHandler<CreateVault, Unit>
 {
     private readonly VaultInitializer _initializer;

@@ -6,7 +6,6 @@ using Dendrite.Domain.Vault;
 
 namespace Dendrite.Infrastructure.FileSystem;
 
-/// <summary>Keeps a vault's settings in <c>.dendrite/vault.json</c>. The vault's location is never stored.</summary>
 internal sealed class VaultManifest : IVaultManifest
 {
     private static string FilePath(string vaultPath) => Path.Combine(vaultPath, ".dendrite", "vault.json");

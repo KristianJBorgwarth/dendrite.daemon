@@ -9,7 +9,6 @@ namespace Dendrite.Daemon;
 
 public static class Composition
 {
-    /// <param name="catalog">Where vaults are remembered; defaults to the on-disk catalog.</param>
     public static ServiceProvider BuildServices(IVaultCatalog? catalog = null)
     {
         Log.Configure(FileLog.Write);

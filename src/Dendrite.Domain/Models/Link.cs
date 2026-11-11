@@ -1,6 +1,5 @@
 namespace Dendrite.Domain.Models;
 
-/// <summary>A wiki link found in a note. Owned by the <see cref="Note"/> aggregate.</summary>
 public sealed class Link
 {
     public string Id { get; }

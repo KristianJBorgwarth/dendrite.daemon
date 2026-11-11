@@ -2,10 +2,6 @@ using Dendrite.Domain.FileHandling;
 
 namespace Dendrite.Domain.Models;
 
-/// <summary>
-/// Aggregate root for a note in the index. Tags, links and custom frontmatter belong to it
-/// and can only change through <see cref="Reindex"/>, which keeps them consistent with the file.
-/// </summary>
 public sealed class Note
 {
 
@@ -58,7 +54,6 @@ public sealed class Note
             .Apply(file);
     }
 
-    /// <summary>Rebuilds an aggregate from persisted state without re-applying any rules.</summary>
     public static Note Rehydrate(
         string id,
         string path,
@@ -71,7 +66,6 @@ public sealed class Note
         IEnumerable<CustomFrontMatter> customFrontMatter) =>
         new(id, path, title, slug, createdAt, updatedAt, [.. tags], [.. links], [.. customFrontMatter]);
 
-    /// <summary>Replaces the note's path, title, slug, tags, links and custom frontmatter with what the file now says.</summary>
     public void Reindex(NoteFile file)
     {
         if (string.IsNullOrWhiteSpace(file.Path))

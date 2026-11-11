@@ -3,7 +3,6 @@ using Dendrite.Application.Vaults;
 
 namespace Dendrite.Application.Services;
 
-/// <summary>Registers a folder as a vault from its own manifest, or re-points the vault of that name to it.</summary>
 public sealed class VaultOpener
 {
     private readonly IVaultManifest _manifest;

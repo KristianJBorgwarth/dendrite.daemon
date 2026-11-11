@@ -6,7 +6,6 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Dendrite.Daemon.Tests;
 
-/// <summary>An isolated vault directory plus index database, wired through the real service graph.</summary>
 internal sealed class TestVault : IDisposable
 {
     private readonly ServiceProvider _services = Composition.BuildServices(new InMemoryVaultCatalog());

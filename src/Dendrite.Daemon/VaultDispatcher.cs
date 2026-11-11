@@ -6,7 +6,6 @@ using Mediator;
 
 namespace Dendrite.Daemon;
 
-/// <summary>Selects the vault a request targets, then sends it through Mediator.</summary>
 public sealed class VaultDispatcher
 {
     private readonly ISender _sender;
@@ -53,7 +52,6 @@ public sealed class VaultDispatcher
         _context.Select(_registry.Resolve(vaultRequest.Vault, path));
     }
 
-    // A file inside a vault the daemon does not know at that location (moved or new) brings its own manifest.
     private void AdoptVaultAround(string? path)
     {
         if (string.IsNullOrEmpty(path) || _registry.Owns(path))

@@ -6,7 +6,6 @@ using Dendrite.Infrastructure.Persistence;
 
 namespace Dendrite.Infrastructure.FileSystem;
 
-/// <summary>Stores the registered vaults and the active one as JSON next to the indexes.</summary>
 public sealed class VaultCatalog : IVaultCatalog
 {
     private static string FilePath => Path.Combine(Database.DataRoot(), "vaults.json");

@@ -3,7 +3,6 @@ using Dendrite.Application.Vaults;
 
 namespace Dendrite.Application.Services;
 
-/// <summary>Re-registers the remembered vaults and the active one when the daemon starts.</summary>
 public sealed class VaultRestorer
 {
     private readonly IVaultCatalog _catalog;

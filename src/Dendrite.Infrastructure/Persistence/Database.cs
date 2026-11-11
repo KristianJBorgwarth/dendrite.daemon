@@ -4,7 +4,6 @@ using Microsoft.Data.Sqlite;
 
 namespace Dendrite.Infrastructure.Persistence;
 
-/// <summary>Holds one index per vault and exposes the one belonging to the vault selected for the current request.</summary>
 public sealed class Database : IIndexDatabase, IDisposable
 {
     private readonly VaultContext _context;
@@ -32,7 +31,6 @@ public sealed class Database : IIndexDatabase, IDisposable
 
     public static string IndexPath(string vaultPath) => Path.Combine(vaultPath, ".dendrite", "index.db");
 
-    /// <summary>Where indexes lived before they moved into the vault folders.</summary>
     public static string LegacyIndexPath(string vaultName) => Path.Combine(DataRoot(), vaultName, "index.db");
 
     public void Open(string vaultName, string vaultPath, string? previousRoot = null)
@@ -114,7 +112,6 @@ public sealed class Database : IIndexDatabase, IDisposable
         cmd.ExecuteNonQuery();
     }
 
-    /// <summary>The connection of a specific vault, regardless of the current selection.</summary>
     public SqliteConnection ConnectionFor(string vaultName) => For(vaultName).Connection;
 
     public SqliteTransaction BeginTransaction() => Current.BeginTransaction();

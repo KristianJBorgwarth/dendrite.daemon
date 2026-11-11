@@ -16,7 +16,6 @@ public sealed class RpcRequest
     [JsonPropertyName("params")] public JsonElement? Params { get; init; }
 }
 
-// Source-generated so the daemon stays reflection-free under Native AOT.
 [JsonSourceGenerationOptions(
     PropertyNamingPolicy = JsonKnownNamingPolicy.CamelCase,
     PropertyNameCaseInsensitive = true,

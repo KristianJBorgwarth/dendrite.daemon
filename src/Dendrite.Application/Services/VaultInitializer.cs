@@ -5,7 +5,6 @@ using Dendrite.Domain.Vault;
 
 namespace Dendrite.Application.Services;
 
-/// <summary>Registers a vault, opens its index and builds the index when it is empty.</summary>
 public sealed class VaultInitializer
 {
     private readonly VaultRegistry _registry;

@@ -6,7 +6,6 @@ namespace Dendrite.Application;
 
 public static class DependencyInjection
 {
-    /// <summary>Registers application services. The Mediator itself is generated in the host (see Dendrite.Daemon).</summary>
     public static IServiceCollection AddApplication(this IServiceCollection services)
     {
         services.AddSingleton<VaultRegistry>();

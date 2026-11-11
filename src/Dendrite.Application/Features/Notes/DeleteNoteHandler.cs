@@ -24,7 +24,6 @@ public sealed class DeleteNoteHandler : ICommandHandler<DeleteNote, Unit>
 
         _notes.Remove(note);
 
-        // A failed commit throws, so the error reaches the client instead of being swallowed.
         tx.Commit();
         return ValueTask.FromResult(Unit.Value);
     }
