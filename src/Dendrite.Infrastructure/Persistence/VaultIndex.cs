@@ -2,7 +2,6 @@ using Microsoft.Data.Sqlite;
 
 namespace Dendrite.Infrastructure.Persistence;
 
-/// <summary>The SQLite index of a single vault.</summary>
 internal sealed class VaultIndex : IDisposable
 {
     public SqliteConnection Connection { get; }

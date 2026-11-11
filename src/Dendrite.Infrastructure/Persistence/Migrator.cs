@@ -31,7 +31,6 @@ internal static class Migrator
         }
     }
 
-    // "Dendrite.Infrastructure.Persistence.Migrations.001_note.sql" -> "001_note.sql"
     private static string VersionOf(string resourceName)
     {
         var withoutExt = resourceName[..^".sql".Length];

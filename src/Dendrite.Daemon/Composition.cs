@@ -9,7 +9,6 @@ namespace Dendrite.Daemon;
 
 public static class Composition
 {
-    /// <param name="catalog">Where vaults are remembered; defaults to the on-disk catalog.</param>
     public static ServiceProvider BuildServices(IVaultCatalog? catalog = null)
     {
         Log.Configure(FileLog.Write);
@@ -38,7 +37,6 @@ public static class Composition
             .Query("vault/list", ctx.ListVaults, ctx.ListVaultInfoDto)
             .Command("vault/remove", ctx.RemoveVault)
             .Command("vault/use", ctx.UseVault)
-            .Command("vault/relocate", ctx.RelocateVault)
             .Command("vault/open", ctx.OpenVault)
             .Command("note/create", ctx.CreateNote, ctx.String)
             .Command("note/save", ctx.SaveNote)

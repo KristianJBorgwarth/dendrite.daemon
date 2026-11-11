@@ -6,7 +6,6 @@ using Dendrite.Domain.Vault;
 
 namespace Dendrite.Infrastructure.FileSystem;
 
-/// <summary>Keeps a vault's settings in <c>.dendrite/vault.json</c>. The vault's location is never stored.</summary>
 internal sealed class VaultManifest : IVaultManifest
 {
     private static string FilePath(string vaultPath) => Path.Combine(vaultPath, ".dendrite", "vault.json");
@@ -45,5 +44,6 @@ internal sealed class VaultManifest : IVaultManifest
         var file = FilePath(config.VaultPath);
         Directory.CreateDirectory(Path.GetDirectoryName(file)!);
         File.WriteAllText(file, JsonSerializer.Serialize(dto, ManifestJsonContext.Default.VaultConfigDto));
+        File.WriteAllText(Path.Combine(Path.GetDirectoryName(file)!, ".gitignore"), "index.db*\n");
     }
 }

@@ -2,7 +2,7 @@ namespace Dendrite.Domain.Vault;
 
 public sealed record VaultConfig
 {
-    private static readonly string[] DefaultIgnores = ["index.md", "index", ".templates"];
+    private static readonly string[] DefaultIgnores = ["index.md", "index", ".templates", ".dendrite"];
 
     public string VaultName { get; }
     public string VaultPath { get; }

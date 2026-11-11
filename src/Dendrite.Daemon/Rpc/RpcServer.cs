@@ -5,7 +5,6 @@ using Mediator;
 
 namespace Dendrite.Daemon.Rpc;
 
-/// <summary>Newline-delimited JSON-RPC 2.0 over a text stream, dispatching each method to Mediator.</summary>
 public sealed class RpcServer
 {
     private const int ParseError = -32700;

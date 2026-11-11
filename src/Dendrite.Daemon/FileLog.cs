@@ -1,6 +1,5 @@
 namespace Dendrite.Daemon;
 
-/// <summary>Stdout carries the RPC protocol, so all diagnostics go to a log file.</summary>
 internal static class FileLog
 {
     private static readonly Lock Gate = new();

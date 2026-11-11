@@ -22,7 +22,6 @@ internal sealed class Transaction : ITransaction
         {
             foreach (var (path, content) in _staged)
             {
-                // Never overwrite a file that already exists on disk.
                 if (File.Exists(path))
                     continue;
 

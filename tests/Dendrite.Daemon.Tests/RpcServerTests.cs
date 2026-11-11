@@ -73,8 +73,6 @@ public class RpcServerTests
         finally
         {
             Directory.Delete(other, true);
-            var dbDir = Path.GetDirectoryName(Dendrite.Infrastructure.Persistence.Database.IndexPathForVault(name))!;
-            if (Directory.Exists(dbDir)) Directory.Delete(dbDir, true);
         }
     }
 

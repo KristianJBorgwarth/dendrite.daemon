@@ -1,6 +1,5 @@
 namespace Dendrite.Application;
 
-/// <summary>Stdout carries the RPC protocol, so diagnostics go to a sink the host configures (a log file).</summary>
 public static class Log
 {
     private static Action<string, string>? _sink;

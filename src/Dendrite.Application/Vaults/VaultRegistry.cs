@@ -2,14 +2,12 @@ using Dendrite.Domain.Vault;
 
 namespace Dendrite.Application.Vaults;
 
-/// <summary>The vaults known to the daemon, keyed by vault name (the vault's identity).</summary>
 public sealed class VaultRegistry
 {
     private readonly Dictionary<string, VaultConfig> _vaults = new(StringComparer.Ordinal);
 
     public IReadOnlyCollection<VaultConfig> All => _vaults.Values;
 
-    /// <summary>The vault requests fall back to when they name none and no path places them in one.</summary>
     public string? Active { get; private set; }
 
     public bool Contains(string name) => _vaults.ContainsKey(name);
@@ -24,7 +22,6 @@ public sealed class VaultRegistry
 
     public VaultCatalogState ToState() => new() { Active = Active, Vaults = [.. _vaults.Values] };
 
-    /// <summary>Adds or replaces a vault. Returns true when the vault was not registered before.</summary>
     public bool Register(VaultConfig config)
     {
         ValidateName(config.VaultName);
@@ -51,7 +48,6 @@ public sealed class VaultRegistry
         return _vaults.Remove(name);
     }
 
-    /// <summary>Points an already registered vault at a new folder.</summary>
     public void Replace(VaultConfig config)
     {
         if (!_vaults.ContainsKey(config.VaultName))
@@ -60,11 +56,6 @@ public sealed class VaultRegistry
         _vaults[config.VaultName] = config;
     }
 
-    /// <summary>The vault registered at exactly this folder, if any.</summary>
-    public VaultConfig? FindByPath(string vaultPath) =>
-        _vaults.Values.FirstOrDefault(v => v.VaultPath == vaultPath);
-
-    /// <summary>True when the vault is already registered at the same path; throws when the name belongs to another path.</summary>
     public bool CheckAvailability(VaultConfig config)
     {
         if (!_vaults.TryGetValue(config.VaultName, out var existing))
@@ -77,7 +68,11 @@ public sealed class VaultRegistry
         return true;
     }
 
-    /// <summary>Picks the vault by explicit name, then by the vault root containing the path, then the active vault, then the only vault.</summary>
+    private VaultConfig? Owner(string fullPath) => _vaults.Values
+        .Where(v => IsInside(v.VaultPath, fullPath))
+        .OrderByDescending(v => v.VaultPath.Length)
+        .FirstOrDefault();
+
     public VaultConfig Resolve(string? vault, string? path)
     {
         if (!string.IsNullOrEmpty(vault))
@@ -89,11 +84,7 @@ public sealed class VaultRegistry
 
         if (!string.IsNullOrEmpty(path))
         {
-            var full = System.IO.Path.GetFullPath(path);
-            var owner = _vaults.Values
-                .Where(v => IsInside(v.VaultPath, full))
-                .OrderByDescending(v => v.VaultPath.Length)
-                .FirstOrDefault();
+            var owner = Owner(System.IO.Path.GetFullPath(path));
             if (owner is not null)
                 return owner;
         }

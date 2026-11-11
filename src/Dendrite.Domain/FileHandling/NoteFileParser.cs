@@ -23,7 +23,6 @@ public static partial class NoteFileParser
             ExtractLinks(body));
     }
 
-    // Col is a 1-based UTF-8 byte offset, which is what Neovim diagnostics expect.
     public static List<ExtractedLink> ExtractLinks(string body)
     {
         var links = new List<ExtractedLink>();

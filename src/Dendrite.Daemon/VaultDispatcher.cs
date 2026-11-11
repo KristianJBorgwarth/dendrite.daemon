@@ -3,7 +3,6 @@ using Mediator;
 
 namespace Dendrite.Daemon;
 
-/// <summary>Selects the vault a request targets, then sends it through Mediator.</summary>
 public sealed class VaultDispatcher
 {
     private readonly ISender _sender;

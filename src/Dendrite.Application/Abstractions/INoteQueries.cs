@@ -1,6 +1,5 @@
 namespace Dendrite.Application.Abstractions;
 
-/// <summary>Read side of the index. Answers questions straight from the database without loading aggregates.</summary>
 public interface INoteQueries
 {
     int CountNotes();

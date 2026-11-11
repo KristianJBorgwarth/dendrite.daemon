@@ -4,7 +4,6 @@ using Mediator;
 
 namespace Dendrite.Application.Features.Vault;
 
-/// <summary>Unregisters a vault and closes its index. The index file and the notes stay on disk.</summary>
 public sealed class RemoveVaultHandler : ICommandHandler<RemoveVault, Unit>
 {
     private readonly VaultRegistry _registry;

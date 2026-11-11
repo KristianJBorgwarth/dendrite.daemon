@@ -5,7 +5,6 @@ using Dendrite.Domain.Vault;
 
 namespace Dendrite.Application.Services;
 
-/// <summary>Registers a vault, opens its index and builds the index when it is empty.</summary>
 public sealed class VaultInitializer
 {
     private readonly VaultRegistry _registry;
@@ -14,6 +13,7 @@ public sealed class VaultInitializer
     private readonly INoteQueries _queries;
     private readonly IndexRebuilder _rebuilder;
     private readonly IVaultCatalog _catalog;
+    private readonly IVaultManifest _manifest;
 
     public VaultInitializer(
         VaultRegistry registry,
@@ -21,7 +21,8 @@ public sealed class VaultInitializer
         IIndexDatabase indexDatabase,
         INoteQueries queries,
         IndexRebuilder rebuilder,
-        IVaultCatalog catalog)
+        IVaultCatalog catalog,
+        IVaultManifest manifest)
     {
         _registry = registry;
         _vault = vault;
@@ -29,6 +30,7 @@ public sealed class VaultInitializer
         _queries = queries;
         _rebuilder = rebuilder;
         _catalog = catalog;
+        _manifest = manifest;
     }
 
     public static VaultConfig ToConfig(VaultConfigDto c)
@@ -54,7 +56,9 @@ public sealed class VaultInitializer
         try
         {
             _vault.Select(config);
-            _indexDatabase.Open(config.VaultName);
+            _indexDatabase.Open(config.VaultName, config.VaultPath);
+            if (_manifest.Read(config.VaultPath) is null)
+                _manifest.Write(config);
         }
         catch
         {
